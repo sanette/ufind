@@ -1,0 +1,4 @@
+(library
+ (name ufind)
+ (public_name ufind)
+ (libraries unix seq str uunf uucp ubase zarith))
