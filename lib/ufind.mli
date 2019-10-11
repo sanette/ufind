@@ -7,10 +7,9 @@ Ufind is a small library that provides a case insentitive, accent insensitive
  Accents are more general diacritics are recognized for all Latin characters.
  For other alphabets, searching will remain accent sensitive.
 
+{{:https://github.com/sanette/ufind}github}
+
 @version 0.01
-
-@author Vu Ngoc San
-
 *)
 
 (** {2 Example} 
