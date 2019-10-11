@@ -38,7 +38,7 @@ Giáp Đông Nghị
 
 
 
-(** {2 String transformations}
+(** {2 Casefolding}
 
  The [casefolding] parameter is the function used to perform a {b
    case-insensitive} search. Two strings that have the same image under this
