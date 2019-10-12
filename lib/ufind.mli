@@ -7,14 +7,16 @@ Ufind is a small library that provides a case insentitive, accent insensitive
  Accents are more general diacritics are recognized for all Latin characters.
  For other alphabets, searching will remain accent sensitive.
 
-{{:https://github.com/sanette/ufind}github}
+{{:https://github.com/sanette/ufind}source on github}
 
 @version 0.01
 *)
 
-(** {2 Example} 
-
-Here [sample] is a list of names that can be found in the test directory.
+(** {1 Example} 
+    
+    For searching a substring in a list of strings, you only need two
+    lines of code.  Here we use the [sample] list of names that can be
+    found in the test directory.
 
 First we prepare the data:
 {[
@@ -33,9 +35,19 @@ Giáp Đông Nghị
 - : unit = ()                 
 ]}
 
+The string "Olivia Apodaca" came first, because the substring "ap" is
+present without any accent substitution. If we searched "áp" instead,
+the order of the results would have been inverted.
 *)
 
 
+
+(** {1 Search filters}
+
+The search can be greatly modified by playing with two filters: {e casefolding}
+   and {e matching_defect}.
+
+*)
 
 (** {2 Casefolding}
 
@@ -92,15 +104,51 @@ val capitalize_casefold : string -> string
    for the first letter in upper case. *)
 
 
-(** {2 Searching}
+(** {2 Matching defect}
+
+Ufind uses a function that establishes the quality of "A being a substring of
+   B". It is entirely parameterizable. It should be fast and {e not} deal with
+   accents, only raw strings. *)
+
+type matching_defect =
+  [ `MD_EQUAL
+  | `MD_SUBSTRING
+  | `MD_CUSTOM of ((string * string) -> (string * string) -> int option)
+  ]
+(**
+
+   - The default matching defect is [`MD_SUBSTRING]. For this function, the
+   defect increases with the position of the substring within the string, and
+   with the difference between their respective sizes.
+
+   - [`MD_EQUAL] only accepts strict equality of strings. Equal strings have
+   zero defect, and non-equal strings have undefined defect.
+
+   - [`MD_CUSTOM f] will compute the defect with the function [f], which takes
+   two arguments, each one of the form [(name, base)], where [name] is a utf8
+   string, and [base] its ASCII version. The function [f] should have the
+   following properties:
+
+      [f s1 s2] returns [None] if [s1] is not considered as a substring of [s2]
+   (whatever you want it to mean); otherwise
+
+      [f s1 s2] returns [Some d] where the non-negative integer [d] measures the
+   defect of [s1] being "close" to [s2]. (The "best match" should return [d=0].)
+
+   {e In future versions, we plan to implement functions that accept small
+   typing errors, like permutations of two consecutive letters. But right now,
+   you need to write your own function for this feature.}  *)
+  
+(** {1 Searching}
 
 The library is meant for searching through a database by filtering a string
    field, typically a name. We use the vocabulary "name" for denoting the field
-   in question.
+   in question; but of course, it can be any string field, as long as it is UTF8
+   encoded.
 
 *)
 
-(** {3 Preparing the data}
+(** {2 Preparing the data}
 
 Before searching, the data has to be preprocessed, in order to transform it into
    a sequence of {!search_item}s. The preprocess can be lazy (will be executed
@@ -126,9 +174,12 @@ val preprocess : ?folding:casefolding ->
   ?limit:int * int ->
   get_name:('a -> string) ->
   get_data:('a -> 'b) -> 'a Seq.t -> 'b search_item Seq.t
-(** [preprocess ~get_name ~get_data seq] is a general way of obtaining a
-   sequence of search items from any kind of data source, as long as it can be
-   converted into a sequence. The function [get_name] takes an element of the
+(** [preprocess ~get_name ~get_data seq] returns a sequence of [search_item]s
+   from the source sequence [seq].
+
+   This function is a general way of obtaining a sequence of search items from
+   any kind of data source, as long as this source can be accessed by a sequence
+   (ocaml type [Seq.t]). The function [get_name] takes an element of the
    sequence and should return the name field that we are searching. The function
    [get_data] on an element of the sequence can return any type of data that we
    want to associate with the result of the search. It can be the same as
@@ -136,11 +187,13 @@ val preprocess : ?folding:casefolding ->
    that from the result of the search on the name field we can recover the other
    fields of the matching records.
 
-   If [limit=(first,length)], [preprocess] will force evaluation of the first
-   [first+length] elements of the sequence [seq], and return a sequence of at
-   most [length] effectively computed [search_items] starting at item #[start]
-   (inclusive). Warning, if no [limit] is given, the whole [seq] is processed;
-   hence if [seq] is infinite, it will never terminate until memory overflow. *)
+   The {!preprocess} function is {e not} lazy; as a consequence, the resulting
+   sequence is very fast to search. If [limit=(first,length)], [preprocess] will
+   force evaluation of the first [first+length] elements of the sequence [seq],
+   and return a sequence of at most [length] effectively computed [search_items]
+   starting at item #[start] (inclusive). Warning, if no [limit] is given, the
+   whole [seq] is processed; hence if [seq] is infinite, it will never terminate
+   until memory overflows. *)
 
 val preprocess_list : ?folding:casefolding ->
   get_name:('a -> string) ->
@@ -163,36 +216,42 @@ val items_from_seq : ?folding:casefolding ->
 
 val items_from_names : ?folding:casefolding ->
   string list -> string search_item Seq.t
-(** [items_from_names list] returns a lazy sequence of search items from a list
-   of strings. For faster searching, rather use [preprocess_list ~get_name:id
-   ~get_data:id list], where [id x = x]. The only interest of [items_from_names]
-   is when the list is really long and we don't want to duplicate it in
-   memory. *)
+(** [items_from_names list] immediately returns a lazy sequence of search items
+   from a list of strings.
+
+   For faster searching, rather use [preprocess_list ~get_name:id ~get_data:id
+   list], where [id x = x]. The only interest of [items_from_names] is when the
+   list is really long and we don't want to duplicate it in memory. *)
   
-(** {3 Search results}
+(** {2 Search results}
 
 All search functions operate on a sequence of search_items. 
 *)
 
-val select_data : ?folding:casefolding ->
+val select_data :
+  ?folding:casefolding ->
   ?stop:('a search_item -> bool) ->
   ?matching_stop:(int * 'a search_item -> bool) ->
-  'a search_item Seq.t -> string -> 'a list
+  ?matching_defect:matching_defect -> 'a search_item Seq.t -> string -> 'a list
 (** [select_data seq name] searches for the string [name] within the sequence of
    search items [seq] and returns the sorted list of data corresponding to
-   matching items.  If [stop] is not provided, the search will explore the whole
+   matching items.
+
+   If [stop] is not provided, the search will explore the whole
    sequence. Otherwise, the search will stop when [stop item = true], where
    [item] is the current item in [seq]. The argument [matching_stop] operates in
    a similar way, but is executed only on matching items, and its argument is
-    the couple [(distance, item)]. *)
+   the couple [(distance, item)]. *)
 
 val make_stop : ?length:int -> ?timeout:float -> unit -> 'a -> bool
 (** [make_stop ~length ~timeout ()] creates a 'stop' function suitable for use
-   in {!select_data}. It will stop after processing [length] elements, or when
-   the [timeout] (in seconds) is elapsed. Note that the timer starts as soon at
-   the unit argument [()] is provided. *)
+   in {!select_data}.
 
-(** {2 Utilities for sequences} *)
+    It will stop after processing [length] elements, or when the [timeout] (in
+   seconds) is elapsed. Note that the timer starts as soon at the unit argument
+   [()] is provided. *)
+
+(** {1 Utilities for sequences} *)
 
 val seq_to_list_rev : 'a Seq.t -> 'a list
 (** Evaluate the whole sequence and convert it to a list, in reverse order. *)
@@ -201,5 +260,7 @@ val seq_truncate : int -> int -> 'a Seq.t -> 'a Seq.t
 (** (Half)-immediate truncation of a sequence. [seq_truncate start length seq]
    returns a sequence of length [length] (or less in case the initial sequence
    is too short) containing the elements of the initial [seq] starting at the
-   [start]-eth element.  This operation is not entirely lazy: elements before
-   #[start] will be evaluated. But no other element.  *)
+   [start]-eth element.
+
+   This operation is not entirely lazy: elements before #[start] will be
+   evaluated. But no other element.  *)

@@ -211,8 +211,10 @@ let apply_subs subs s =
   Uutf.String.fold_utf_8 folder () s;
   Buffer.to_bytes b;;
 
-(* Searching. For speed, we preassociate to each utf string its base
-   version. *)
+(* Preparing data for Searching. *)
+(*********************************)
+
+(* For speed, we preassociate to each utf string its base version. *)
 type 'a search_item =
   { utf8 : string; (* canonical caseless form of the name record. *)
     base : string; (* lowercase ascii *)
@@ -239,6 +241,16 @@ let item_from_name ~folding name =
    let get_data _ = () in   
    make_item ~folding ~get_name ~get_data name
 
+(* Testing quality/defect of being a substring *)
+(***********************************************)
+
+type matching_defect =
+  [ `MD_EQUAL
+  | `MD_SUBSTRING
+  | `MD_CUSTOM of ((string * string) -> (string * string) -> int option)
+  ]
+(* A defect function need not be symmetric. The first argument is always the
+   search pattern and the second is the candidate data. *)
 
 let search_forward_opt reg s pos =
   try Some (Str.search_forward reg s pos) with
@@ -260,6 +272,14 @@ let test_substring (name1, base1) (name2, base2) =
   search_forward_opt r name2 0
   |> option_map (fun i -> i + String.length base2 - String.length base1)
 
+let defect_fn = function
+  | `MD_EQUAL -> test_equal
+  | `MD_SUBSTRING -> test_substring
+  | `MD_CUSTOM f -> f
+
+(* Comuputing the distance in terms of accents substitutions *)
+(*************************************************************)
+    
 (* The distance is the minimum number of substitutions on item1 and item2 (we
    take the sum) required to make them "equal".  It is more efficient if item1
    has fewer accents than item2. It also returns a pair of matching
@@ -384,11 +404,13 @@ let rec seq_stop stop seq =
    [seq]. The argument [matching_stop] operates in a similar way, but is
    executed only on matching items, and it has two arguments: [(distance,
    item)]. *)
-let select_data ?(folding = default_casefolding) ?stop ?matching_stop seq name =
+let select_data ?(folding = default_casefolding) ?stop ?matching_stop
+    ?(matching_defect : matching_defect = `MD_SUBSTRING) seq name =
   let seq = match stop with
     | None -> seq
     | Some stop -> seq_stop stop seq in
-  let matching = find_name ~folding seq name in
+  let dtest = defect_fn matching_defect in
+  let matching = find_name ~folding ~dtest seq name in
   let matching = match matching_stop with
     | None -> matching
     | Some stop ->

@@ -5,13 +5,34 @@ insensitive search in strings encoded in utf8. It is meant to be easy
 to use, either for searching simple lists, or for digging in large
 databases.
 
-Accents are more general diacritics are recognized for all Latin
+Accents and more general diacritics are recognized for all Latin
  characters.  For other alphabets, searching will remain accent
  sensitive.
 
+__Ufind__ will give you a list of matching strings, and this this is a
+_ranking_: exact matches will be ranked first, and then substrings
+and/or strings obtained by modifying the accents will have a lower
+ranking.
+
+The notion of "exact match" is actually parameterizable. It can be a
+strict equality of strings, but also a case-insensitive equality, see
+["Casefolding"](https://sanette.github.io/ufind/#casefolding) in the
+doc.
+
+## Documentation
+
+The API can be found [here](https://sanette.github.io/ufind/).
+
+Ufind is based on [Ubase](https://github.com/sanette/ubase) for diacritics removal.
+
+Internally, it uses Gray's code for iterating efficiently through all
+possible accented versions of a word.
+
 ## Example
 
-Here `sample` is a list of names that can be found in the test directory.
+For searching a substring in a list of strings, you only need two
+lines of code.  Here we use the `sample` list of names that can be
+found in the test directory.
 
 First we prepare the data:
 
@@ -32,11 +53,17 @@ Giáp Đông Nghị
 - : unit = ()                 
 ```
 
+The string "Olivia Apodaca" came first, because the substring "ap" is
+present without any accent substitution. If we searched "áp" instead,
+the order of the results would have been inverted.
+
+
 ## Install
 
-`dune build`
-
-`opam install .`
+```
+dune build
+opam install .
+```
 
 
 ## Result of test
