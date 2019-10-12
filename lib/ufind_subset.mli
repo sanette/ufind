@@ -5,7 +5,7 @@ This module can iter all subsets of a given list (considered as a set with
    useful because the number of subsets of a list of n elements is 2^n, so can
    quickly grow out of memory.
 
-It internally uses a representation of subset by binary Gray codes, which is
+It internally uses a representation of subsets by binary Gray codes, which is
    particularly efficient for ordering all subsets in a way that {e two
    consecutive subsets differ by only one element}. (That is to say, to obtain
    the next subset, you only need to add or remove one element.)

@@ -4,7 +4,7 @@ Ufind is a small library that provides a case insentitive, accent insensitive
    search in strings encoded in utf8. It is meant to be easy to use, either for
    searching simple lists, or for digging in large databases.
 
- Accents are more general diacritics are recognized for all Latin characters.
+ Accents and more general diacritics are recognized for all Latin characters.
  For other alphabets, searching will remain accent sensitive.
 
 {{:https://github.com/sanette/ufind}source on github}
@@ -118,7 +118,7 @@ type matching_defect =
 (**
 
    - The default matching defect is [`MD_SUBSTRING]. For this function, the
-   defect increases with the position of the substring within the string, and
+   defect increases with the position of the substring A within the string B, and
    with the difference between their respective sizes.
 
    - [`MD_EQUAL] only accepts strict equality of strings. Equal strings have
@@ -135,16 +135,25 @@ type matching_defect =
       [f s1 s2] returns [Some d] where the non-negative integer [d] measures the
    defect of [s1] being "close" to [s2]. (The "best match" should return [d=0].)
 
+      [f s1 s2] returns [Some 0] if [s1 = s2].
+
+   A good matching_defect function should primarily compare the "name" components 
+   of [s1] and [s2]; it does not need to take into account their "base" components. 
+   However, it must be consistent in the following way:
+
+      If [f (name1, base1) (name2, base2) <> None] then we must have 
+      [f (base1, "") (base2, "") <> None] as well.
+
    {e In future versions, we plan to implement functions that accept small
    typing errors, like permutations of two consecutive letters. But right now,
    you need to write your own function for this feature.}  *)
   
 (** {1 Searching}
 
-The library is meant for searching through a database by filtering a string
-   field, typically a name. We use the vocabulary "name" for denoting the field
-   in question; but of course, it can be any string field, as long as it is UTF8
-   encoded.
+The Ufind library is meant for searching through a database by filtering a
+   string field, typically a name. We use the vocabulary "name" for denoting the
+   field in question; but of course, it can be any string field, as long as it
+   is UTF8 encoded.
 
 *)
 
@@ -251,7 +260,12 @@ val make_stop : ?length:int -> ?timeout:float -> unit -> 'a -> bool
    seconds) is elapsed. Note that the timer starts as soon at the unit argument
    [()] is provided. *)
 
-(** {1 Utilities for sequences} *)
+(** {1 Utilities for sequences}
+
+    {e (In order to keep the Ufind library compatible with ocaml 4.05, the newer
+   [Seq] functions that appeared in 4.07 are not used.)}
+
+ *)
 
 val seq_to_list_rev : 'a Seq.t -> 'a list
 (** Evaluate the whole sequence and convert it to a list, in reverse order. *)
