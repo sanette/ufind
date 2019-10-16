@@ -58,18 +58,17 @@ The search can be greatly modified by playing with two filters: {e casefolding}
 *)
 
 type casefolding =
-  [ `CF_D144 (** http://unicode.org/versions/latest/ch03.pdf page 157. *)
-  | `CF_D145 (** http://unicode.org/versions/latest/ch03.pdf page 158. *)
-  | `CF_D147 (** http://unicode.org/versions/latest/ch03.pdf page 158. *)
-  | `CF_NONE (** no transformation *)
-  | `CF_LATIN144 (** D144 restricted to Latin letters *)
-  | `CF_LATIN147 (** D147 restricted to Latin letters *)
-  | `CF_ASCII (** ASCII lowercase *)
-  | `CF_CUSTOM of (string -> string)
-  ]
-(** For enforcing a {b case-sensitive} search, just use [`CF_NONE]. The
+  | CF_D144 (** http://unicode.org/versions/latest/ch03.pdf page 157. *)
+  | CF_D145 (** http://unicode.org/versions/latest/ch03.pdf page 158. *)
+  | CF_D147 (** http://unicode.org/versions/latest/ch03.pdf page 158. *)
+  | CF_NONE (** no transformation *)
+  | CF_LATIN144 (** D144 restricted to Latin letters *)
+  | CF_LATIN147 (** D147 restricted to Latin letters *)
+  | CF_ASCII (** ASCII lowercase *)
+  | CF_CUSTOM of (string -> string)
+  (** For enforcing a {b case-sensitive} search, just use [CF_NONE]. The
    casefolding function can also be used to {e normalize} the utf8 string; this
-   is done by [`CF_D145] and [`CF_D147].  However, recall that normalizing is a
+   is done by [CF_D145] and [CF_D147].  However, recall that normalizing is a
    slow operation, and it should rather be done directly when storing items in
    your database. The expected properties of the casefolding function are:
 
@@ -111,20 +110,19 @@ Ufind uses a function that establishes the quality of "A being a substring of
    accents, only raw strings. *)
 
 type matching_defect =
-  [ `MD_EQUAL
-  | `MD_SUBSTRING
-  | `MD_CUSTOM of ((string * string) -> (string * string) -> int option)
-  ]
-(**
+  | MD_EQUAL
+  | MD_SUBSTRING
+  | MD_CUSTOM of ((string * string) -> (string * string) -> int option)
+  (**
 
-   - The default matching defect is [`MD_SUBSTRING]. For this function, the
+   - The default matching defect is [MD_SUBSTRING]. For this function, the
    defect increases with the position of the substring A within the string B, and
    with the difference between their respective sizes.
 
-   - [`MD_EQUAL] only accepts strict equality of strings. Equal strings have
+   - [MD_EQUAL] only accepts strict equality of strings. Equal strings have
    zero defect, and non-equal strings have undefined defect.
 
-   - [`MD_CUSTOM f] will compute the defect with the function [f], which takes
+   - [MD_CUSTOM f] will compute the defect with the function [f], which takes
    two arguments, each one of the form [(name, base)], where [name] is a utf8
    string, and [base] its ASCII version. The function [f] should have the
    following properties:
@@ -197,12 +195,16 @@ val preprocess : ?folding:casefolding ->
    fields of the matching records.
 
    The {!preprocess} function is {e not} lazy; as a consequence, the resulting
-   sequence is very fast to search. If [limit=(first,length)], [preprocess] will
-   force evaluation of the first [first+length] elements of the sequence [seq],
-   and return a sequence of at most [length] effectively computed [search_items]
-   starting at item #[start] (inclusive). Warning, if no [limit] is given, the
+   sequence is very fast to search. If [limit=(offset,count)], [preprocess] will
+   force evaluation of the first [offset+count] elements of the sequence [seq],
+   and return a sequence of at most [count] effectively computed [search_items]
+   starting at item #[offset] (inclusive). Warning, if no [limit] is given, the
    whole [seq] is processed; hence if [seq] is infinite, it will never terminate
-   until memory overflows. *)
+   until memory overflows.
+
+    In all [preprocess*] functions, the returned sequence is not mutable, and
+    will always point to the start of the source sequence. So there is no need
+   to reset it for each new search. *)
 
 val preprocess_list : ?folding:casefolding ->
   get_name:('a -> string) ->
@@ -217,16 +219,25 @@ val preprocess_file : ?limit:int * int ->
    [get_data line]. Returns the sequence of pre-processed search items.  *) 
 
 val items_from_seq : ?folding:casefolding ->
-  ('a -> string) -> ('a -> 'b) -> 'a Seq.t -> 'b search_item Seq.t
+  get_name:('a -> string) ->
+  get_data:('a -> 'b) -> 'a Seq.t -> 'b search_item Seq.t
 (** Similar to {!preprocess} except that there is no preprocessing: this
-   immediately returns a lazy sequence of items, suitable for searching. If
-   memory allows and if you intend to perform several searches, use
+   immediately returns a lazy sequence of items, suitable for searching.
+
+    If the source sequence is mutable (most sequences are), then for each new
+   search, it has to be reset to its origin position, and a new call to
+   [items_from_seq] is required.
+
+    If memory allows and if you intend to perform several searches, use
    {!preprocess} for faster searching. *)
 
 val items_from_names : ?folding:casefolding ->
   string list -> string search_item Seq.t
 (** [items_from_names list] immediately returns a lazy sequence of search items
    from a list of strings.
+
+    The returned sequence is not mutable, and will always point to the start of
+   the list. So there is no need to reset it for each new search.
 
    For faster searching, rather use [preprocess_list ~get_name:id ~get_data:id
    list], where [id x = x]. The only interest of [items_from_names] is when the
@@ -252,29 +263,53 @@ val select_data :
    a similar way, but is executed only on matching items, and its argument is
    the couple [(distance, item)]. *)
 
-val make_stop : ?length:int -> ?timeout:float -> unit -> 'a -> bool
-(** [make_stop ~length ~timeout ()] creates a 'stop' function suitable for use
+val make_stop : ?count:int -> ?timeout:float -> unit -> 'a -> bool
+(** [make_stop ~count ~timeout ()] creates a 'stop' function suitable for use
    in {!select_data}.
 
-    It will stop after processing [length] elements, or when the [timeout] (in
+    It will stop after processing [count] elements, or when the [timeout] (in
    seconds) is elapsed. Note that the timer starts as soon at the unit argument
-   [()] is provided. *)
+   [()] is provided. 
 
-(** {1 Utilities for sequences}
+    The stop function has to be created again after each use.
+*)
+
+(** {1 Utilities} *)
+
+(** {2 Sequences}
 
     {e (In order to keep the Ufind library compatible with ocaml 4.05, the newer
    [Seq] functions that appeared in 4.07 are not used.)}
 
- *)
+
+*)
 
 val seq_to_list_rev : 'a Seq.t -> 'a list
 (** Evaluate the whole sequence and convert it to a list, in reverse order. *)
 
 val seq_truncate : int -> int -> 'a Seq.t -> 'a Seq.t
-(** (Half)-immediate truncation of a sequence. [seq_truncate start length seq]
-   returns a sequence of length [length] (or less in case the initial sequence
+(** (Half)-immediate truncation of a sequence. [seq_truncate offset count seq]
+   returns a sequence of length [count] (or less in case the initial sequence
    is too short) containing the elements of the initial [seq] starting at the
-   [start]-eth element.
+   [offset]-eth element.
 
-   This operation is not entirely lazy: elements before #[start] will be
+   This operation is not entirely lazy: elements before #[offset] will be
    evaluated. But no other element.  *)
+
+val seq_split : 'a Seq.t -> 'a Seq.t * 'a Seq.t
+(** Dynamic splittig of a sequence. If [s1,s2 = seq_split seq] then [s2] will
+   always start after the last evaluated element of [s1].
+
+    For instance if we let [st = seq_truncate s1 10] and iterate on [st], then
+   the iteration of [s2] will start at the 11th element of [seq].  *)
+
+(** {2 String conversions} 
+
+Shortcuts to some Ubase functions.
+*)
+
+val isolatin_to_utf8 : string -> string
+(** Convert ISO_8859_1 to UTF8 *)
+
+val utf8_to_base : string -> string
+(** Remove all accents. *)

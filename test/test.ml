@@ -113,7 +113,7 @@ let test_list () =
 
   let wrong = "xxéço" in
   let probable = "ïlo" in
-  let folding = `CF_D144 (* `CF_CUSTOM capitalize_casefold *) in
+  let folding = CF_D144 (* CF_CUSTOM capitalize_casefold *) in
 
   let items = items_from_names ~folding list in
   
