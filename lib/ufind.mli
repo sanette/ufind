@@ -311,5 +311,6 @@ Shortcuts to some Ubase functions.
 val isolatin_to_utf8 : string -> string
 (** Convert ISO_8859_1 to UTF8 *)
 
-val utf8_to_base : string -> string
-(** Remove all accents. *)
+val utf8_to_ascii : string -> string
+(** Convert to ASCII by removing all accents on Latin letters, and ignoring all
+   non-ascii chars or non-Latin letters. *)

@@ -608,4 +608,4 @@ let make_stop ?count ?timeout () =
 
 let isolatin_to_utf8 = Ubase.isolatin_to_utf8
 
-let utf8_to_base = Ubase.from_utf8_string ~malformed:"?" ~strip:""
+let utf8_to_ascii = Ubase.from_utf8_string ~malformed:"?" ~strip:""
