@@ -4,13 +4,13 @@ Ufind is a small library that provides a case insentitive, accent insensitive
    search in strings encoded in utf8. It is meant to be easy to use, either for
    searching simple lists, or for digging in large databases.
 
- Accents and more general diacritics are recognized for all Latin characters.
- For other alphabets, searching will remain accent sensitive.
+ Thanks to {{:https://sanette.github.io/ubase/}Ubase}, accents and more general
+   diacritics are recognized for all Latin characters.  For other
+   alphabets/scripts, searching will remain accent sensitive.
 
-{{:https://github.com/sanette/ufind}source on github}
+{{:https://github.com/sanette/ufind}Source on github}
 
-@version 0.01
-*)
+@version 0.01 *)
 
 (** {1 Example} 
     
@@ -65,16 +65,17 @@ type casefolding =
   | CF_LATIN144 (** D144 restricted to Latin letters *)
   | CF_LATIN147 (** D147 restricted to Latin letters *)
   | CF_ASCII (** ASCII lowercase *)
-  | CF_CUSTOM of (string -> string)
-  (** For enforcing a {b case-sensitive} search, just use [CF_NONE]. The
+  | CF_CUSTOM of (string -> string) (** any compatible function -- see below *)
+(** For enforcing a {b case-sensitive} search, just use [CF_NONE]. The
    casefolding function can also be used to {e normalize} the utf8 string; this
    is done by [CF_D145] and [CF_D147].  However, recall that normalizing is a
    slow operation, and it should rather be done directly when storing items in
    your database. The expected properties of the casefolding function are:
 
-    - Removing accents (with Ubase) followed by casefolding should give the same
-   result as casefolding followed be removing accents. The resulting string is
-   called the base string. It contains only ASCII characters.
+    - Removing accents (with {!utf8_to_ascii}) followed by casefolding should
+   give the same result as casefolding followed be removing accents. The
+   resulting string is called the base string. It contains only ASCII
+   characters.
 
     - Applying casefolding on a base string should return the unmodified string.
 
@@ -90,10 +91,9 @@ type casefolding =
    the strings obtained by applying [String.lowercase_ascii].
 
    CUSTOM casefolding functions can be used for specific cases. For instance, a
-   useful one, {!capitalize_casefold}, is to combine a usual lower-case
-   function with capitalizing the first letter. In this way, "Ver" (or "ver")
-   will match with "Véronique" and "VÉRONIQUE" but not with "Prévert" or
-   "PRÉVERT".
+   useful one, {!capitalize_casefold}, is to combine a usual lower-case function
+   with capitalizing the first letter. In this way, "Ver" (or "ver") will match
+   with "Véronique" and "VÉRONIQUE" but not with "Prévert" or "PRÉVERT".
 
 *)
 
@@ -113,7 +113,8 @@ type matching_defect =
   | MD_EQUAL
   | MD_SUBSTRING
   | MD_CUSTOM of ((string * string) -> (string * string) -> int option)
-  (**
+
+(**
 
    - The default matching defect is [MD_SUBSTRING]. For this function, the
    defect increases with the position of the substring A within the string B, and
@@ -258,9 +259,9 @@ val select_data :
    matching items.
 
    If [stop] is not provided, the search will explore the whole
-   sequence. Otherwise, the search will stop when [stop item = true], where
-   [item] is the current item in [seq]. The argument [matching_stop] operates in
-   a similar way, but is executed only on matching items, and its argument is
+   sequence. Otherwise, the search will stop after processing the first [item]
+   in [seq] for which [stop item = true]. The argument [matching_stop] operates
+   in a similar way, but is executed only on matching items, and its argument is
    the couple [(distance, item)]. *)
 
 val make_stop : ?count:int -> ?timeout:float -> unit -> 'a -> bool
@@ -305,7 +306,7 @@ val seq_split : 'a Seq.t -> 'a Seq.t * 'a Seq.t
 
 (** {2 String conversions} 
 
-Shortcuts to some Ubase functions.
+Shortcuts to some {{:https://sanette.github.io/ubase/}Ubase} functions.
 *)
 
 val isolatin_to_utf8 : string -> string
