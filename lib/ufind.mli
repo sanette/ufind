@@ -300,7 +300,7 @@ val seq_split : 'a Seq.t -> 'a Seq.t * 'a Seq.t
 (** Dynamic splittig of a sequence. If [s1,s2 = seq_split seq] then [s2] will
    always start after the last evaluated element of [s1].
 
-    For instance if we let [st = seq_truncate s1 10] and iterate on [st], then
+    For instance if we let [st = seq_truncate 0 10 s1] and iterate on [st], then
    the iteration of [s2] will start at the 11th element of [seq].  *)
 
 (** {2 String conversions} 
