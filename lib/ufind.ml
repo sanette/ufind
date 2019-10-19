@@ -8,27 +8,23 @@
 (* This module depends on Ufind_Subset *)
 
 module Subset = Ufind_subset
-  
-type replacement =
-  | Malformed
-  | Uchar 
-  | Strip
-
-(* A substitution is a map (a association list) that with an integer (the
-   position in the utf stream) associates the replacement of the corresponding
-   utf char. *)
-type substitution = (int * (replacement * string)) list
+module Int = struct type t = int let compare : int -> int -> int = compare end
+module Imap = Map.Make(Int)
 
 let option_map f = function
   | Some x -> Some (f x)
   | None -> None
 
+
+(* Casefolding *)
+(***************)
+    
 type casefolding =
   | CF_D144 (* http://unicode.org/versions/latest/ch03.pdf page 157. *)
   | CF_D145 (* http://unicode.org/versions/latest/ch03.pdf page 158. *)
   | CF_D147 (* http://unicode.org/versions/latest/ch03.pdf page 158. *)
   | CF_NONE (* no transformation *)
-  | CF_LATIN144 (* D144 restricted to Latin letters *)
+  | CF_LATIN145 (* D145 restricted to Latin letters *)
   | CF_LATIN147 (* D147 restricted to Latin letters *)
   | CF_ASCII (* ASCII lowercase *)
   | CF_CUSTOM of (string -> string)
@@ -67,8 +63,44 @@ type casefolding =
 
  *)
 
-let default_casefolding : casefolding =CF_D144;;
-    
+let default_casefolding : casefolding = CF_D144;;
+
+let iadd map (k, (v : string )) = Imap.add k v map
+        
+let cf_latin145_map =
+  List.fold_left iadd Imap.empty Ufind_data.cf_d145_alist
+
+let cf_latin147_map =
+  List.fold_left iadd Imap.empty Ufind_data.cf_d147_alist
+
+(* This is much faster than d147 for bytecode (test 0.6 sec instead of 1,1 sec)
+   but NOT faster for native code (same speed). Why? *)
+let cf_latin147 s =
+  let b = Buffer.create (String.length s * 3) in
+  let add_uchar _ _ = function
+    | `Malformed  _ -> Uutf.Buffer.add_utf_8 b Uutf.u_rep
+    | `Uchar u -> match Imap.find_opt (Uchar.to_int u) cf_latin147_map with
+      | None -> Uutf.Buffer.add_utf_8 b u
+      | Some s -> Buffer.add_string b s
+  in
+  Uutf.String.fold_utf_8 add_uchar () s;
+  Buffer.contents b
+
+(* This is much faster than cf_d145 for bytecode (test 0.6 sec instead of 1,1
+   sec) and marginally faster for native code. But it's not guaranteed to give
+   exactly the same results as cf_d145. *)
+let cf_latin145 s =
+  let b = Buffer.create (String.length s * 3) in
+  let add_uchar _ _ = function
+    | `Malformed  _ -> Uutf.Buffer.add_utf_8 b Uutf.u_rep
+    | `Uchar u -> match Imap.find_opt (Uchar.to_int u) cf_latin145_map with
+      | None -> Uutf.Buffer.add_utf_8 b u
+      | Some s -> Buffer.add_string b s
+  in
+  Uutf.String.fold_utf_8 add_uchar () s;
+  Buffer.contents b
+
+
 (****)
 (* This is taken from
    https://erratique.ch/software/uucp/doc/Uucp.Case.html#caselesseq *)
@@ -127,7 +159,7 @@ let cf_d147 s =
 (****)
 
 let cf_d144 s =
-  let b = Buffer.create (String.length s * 3) in
+  let b = Buffer.create (String.length s * 2) in
   let add_uchar _ _ = function
     | `Malformed  _ -> Uutf.Buffer.add_utf_8 b Uutf.u_rep
     | `Uchar u -> match Uucp.Case.Fold.fold u with
@@ -158,8 +190,8 @@ let casefolding_fn = function
   | CF_D145 -> cf_d145
   | CF_D147 -> cf_d147
   | CF_NONE -> fun s : string -> s
-  | CF_LATIN144 -> failwith "Not implemented"
-  | CF_LATIN147 -> failwith "Not implemented"
+  | CF_LATIN145 -> cf_latin145
+  | CF_LATIN147 -> cf_latin147
   | CF_ASCII -> String.lowercase_ascii
   | CF_CUSTOM f -> f
 
@@ -170,11 +202,25 @@ let casefolding_pair folding = match folding with
   | CF_D144
   | CF_D145
   | CF_D147
-  | CF_LATIN144
+  | CF_LATIN145
   | CF_LATIN147
   | CF_ASCII -> casefolding_fn folding, casefolding_fn CF_ASCII
   | CF_NONE -> (fun s : string -> s), (fun s : string -> s)
   | CF_CUSTOM f -> f, f
+
+
+(* Removing accents and saving the substitution maps *)
+(*****************************************************)
+
+type replacement =
+  | Malformed
+  | Uchar 
+  | Strip
+
+(* A substitution is a map (a association list) that with an integer (the
+   position in the utf stream) associates the replacement of the corresponding
+   utf char. *)
+type substitution = (int * (replacement * string)) list
 
 let from_utf8_string_with_subs ?strip s : string * substitution =
   let b = Buffer.create (String.length s) in
@@ -212,140 +258,8 @@ let apply_subs subs s =
   Uutf.String.fold_utf_8 folder () s;
   Buffer.to_bytes b;;
 
-(* Preparing data for Searching. *)
-(*********************************)
-
-(* For speed, we preassociate to each utf string its base version. *)
-type 'a search_item =
-  { utf8 : string; (* canonical caseless form of the name record. *)
-    base : string; (* lowercase ascii *)
-    subs : substitution; (* the substitutions necessary to map utf8 to base. *)
-    data : 'a (* used to link to the full record where the name comes from. *) }
-
-let base_of_item item = item.base
-
-let data_of_item item = item.data
-                      
-let make_item ~folding ~get_name ~get_data x =
-  let name = get_name x in
-  let data = get_data x in
-  let utf_folding, ascii_folding = folding in
-  let utf8 = utf_folding name in
-  (* [canonical_caseless_key] is responsible for at least 75% of the time *)
-  let base, subs = from_utf8_string_with_subs ~strip:"" utf8 in
-  let base = ascii_folding base in
-  { utf8; base; subs; data }
-
-(* Create a lonely item from a string, with no associated data *)
-let item_from_name ~folding name =
-   let get_name s = s in
-   let get_data _ = () in   
-   make_item ~folding ~get_name ~get_data name
-
-(* Testing quality/defect of being a substring *)
-(***********************************************)
-
-type matching_defect =
-  | MD_EQUAL
-  | MD_SUBSTRING
-  | MD_CUSTOM of ((string * string) -> (string * string) -> int option)
-  (* A defect function need not be symmetric. The first argument is always the
-   search pattern and the second is the candidate data. *)
-
-let search_forward_opt reg s pos =
-  try Some (Str.search_forward reg s pos) with
-  | Not_found -> None
-
-
-let test_equal (name1,_) (name2,_) =
-  if String.equal name1 name2 then Some 0 else None
-
-let find_base ?(test = String.equal) items_seq base =
-  Seq.filter (fun p -> test base p.base) items_seq
-  
-(* The "defect" returned by [test_substring c1 c2] is the position of
-   name1 inside name2 + the difference of lengths base2 - base1. *)
-(* If name1 is a substring of name2 then base1 is a substring of base2, hence
-   this difference is non negative. *)
-let test_substring (name1, base1) (name2, base2) =
-  let r = Str.regexp_string name1 in
-  search_forward_opt r name2 0
-  |> option_map (fun i -> i + String.length base2 - String.length base1)
-
-let defect_fn = function
-  | MD_EQUAL -> test_equal
-  | MD_SUBSTRING -> test_substring
-  | MD_CUSTOM f -> f
-
-(* Comuputing the distance in terms of accents substitutions *)
-(*************************************************************)
-    
-(* The first distance is the minimum number of substitutions on item1 and item2
-   (we take the sum) required to make them "equal".  It is more efficient if
-   item1 has fewer accents than item2. It also returns a pair of matching
-   substitutions, and degree of defect of the test (0=perfect match). If [dtest]
-   is not the default '=', the 'distance' can be no longer symmetric (as with
-   test_substring.) *)
-let distance ?(dtest = test_equal) item1 item2 =
-  match dtest (item1.utf8, item1.base) (item2.utf8, item2.base) with
-  | Some defect -> 0, Some ([], [], defect)
-  | None ->
-    (* We cannot stop at the first match, because unfortunately the Gray code we
-       use is not monotonous. A match at step n does not implies that there
-       cannot be a simpler match at a later step. *)
-    (* Remark: instead of two loops, we could fold over the cartesian product
-       (assuming we construct a cartesian product iterator). *)
-    let rec loop2 name1 seq2 (dist, subs, defect) =
-      match seq2 () with
-      | Seq.Nil -> dist, subs, defect
-      (* dist = distance between name1 and seq2. *)
-      | Seq.Cons (subs2, next) ->
-        let result =
-          let d2 = List.length subs2 in
-          if d2 >= dist (* then we don't need to test this. *)
-          then dist, subs, defect
-          else let name2 = apply_subs subs2 item2.utf8 in
-            match dtest (name1, item1.base) (name2, item2.base) with
-            | Some defect -> d2, Some subs2, defect
-            | None -> dist, subs, defect in
-        loop2 name1 next result in
-    let rec loop1 seq1 dist subs_pair =
-      match seq1 () with
-      | Seq.Nil -> dist, subs_pair
-      (* dist = total distance (sum) between seq1 and seq2 *)
-      | Seq.Cons (subs1, next) ->
-        let dist, subs_pair = 
-          let d1 = List.length subs1 in
-          if d1 >= dist then dist, subs_pair
-          else let name1 =  apply_subs subs1 item1.utf8 in
-            let seq2 = Subset.to_seq item2.subs in
-            let d2, s2, defect = loop2 name1 seq2 (dist, None, -1) in
-            min dist (d1 + d2), match s2 with
-            | None -> subs_pair
-            | Some subs2 -> Some (subs1, subs2, defect) in
-        loop1 next dist subs_pair in
-    let seq1 = Subset.to_seq item1.subs in
-    loop1 seq1 (String.length item1.utf8) None
-
-(* Returns the lazy sequence of matching items using the [dtest] comparison
-   whose first entry is (given by) the provided [name]. Can be infinite.  The
-   [folding] parameter must be the same as the one used to create the
-   [items_seq] sequence. TODO combine them in a data structure. *)
-let find_name ?(folding = default_casefolding) ?(dtest = test_substring)
-    items_seq name =
-  let folding = casefolding_pair folding in
-  let item = item_from_name ~folding name in
-  (* We first reduce the search to the list of matching base items *)
-  let test s1 s2 = dtest (s1,"") (s2,"") <> None in
-  let reduce = find_base ~test items_seq item.base in
-  (* We iterate all items in reduce: *)
-  Seq.map (fun it ->
-      let d, subs_pair = distance ~dtest item it in
-      match subs_pair with
-      | None -> failwith "Probaly a wrong casefolding function."
-      (* Not found, this should not happen since the bases are the same. *)
-      | Some pair -> (d, it, pair)
-    ) reduce;;
+(* Utilities for sequences *)
+(***************************)
 
 (* Evaluate the whole sequence and convert it to a list. *)
 let seq_to_list_rev seq =
@@ -355,14 +269,6 @@ let seq_to_list_rev seq =
 let rec list_to_seq = function
   | [] -> Seq.empty
   | x::rest -> fun () -> Seq.Cons (x, list_to_seq rest)
-    
-(* Convert the result of [find_name] to a sorted list. *)
-let get_result_list seq =
-  seq_to_list_rev seq
-  |> List.stable_sort (fun (dis1,_,def1) (dis2,_,def2) ->
-      match compare dis1 dis2 with
-      | 0 -> compare def1 def2
-      | d -> d)
 
 (* Returns the sequence starting at the nth element (starting from n=0), or the
    empty sequence if the sequence is not long enough. NOT lazy: the elements
@@ -501,28 +407,35 @@ Reading: 5
 *)
 
 
-(* Search the string [name] within the sequence of search items [seq] and
-   returns the sorted list of data corresponding to matching items.  If [stop]
-   is not provided, the search will explore the whole sequence. Otherwise, the
-   search will stop when [stop item = true], where [item] is the current item in
-   [seq]. The argument [matching_stop] operates in a similar way, but is
-   executed only on matching items, and it has two arguments: [(distance,
-   item)]. *)
-let select_data ?(folding = default_casefolding) ?stop ?matching_stop
-    ?(matching_defect : matching_defect = MD_SUBSTRING) seq name =
-  let seq = match stop with
-    | None -> seq
-    | Some stop -> seq_stop stop seq in
-  let dtest = defect_fn matching_defect in
-  let matching = find_name ~folding ~dtest seq name in
-  let matching = match matching_stop with
-    | None -> matching
-    | Some stop ->
-      let stop (d,item,_) = stop (d, item) in
-      seq_stop stop matching in
-  get_result_list matching
-  |> List.map (fun (_,item,_) -> item.data)
+(* Preparing data for Searching. *)
+(*********************************)
 
+(* For speed, we preassociate to each utf string its base version. *)
+type 'a search_item =
+  { utf8 : string; (* canonical caseless form of the name record. *)
+    base : string; (* lowercase ascii *)
+    subs : substitution; (* the substitutions necessary to map utf8 to base. *)
+    data : 'a (* used to link to the full record where the name comes from. *) }
+
+let base_of_item item = item.base
+
+let data_of_item item = item.data
+                      
+let make_item ~folding ~get_name ~get_data x =
+  let name = get_name x in
+  let data = get_data x in
+  let utf_folding, ascii_folding = folding in
+  let utf8 = utf_folding name in
+  (* [canonical_caseless_key] is responsible for at least 75% of the time *)
+  let base, subs = from_utf8_string_with_subs ~strip:"" utf8 in
+  let base = ascii_folding base in
+  { utf8; base; subs; data }
+
+(* Create a lonely item from a string, with no associated data *)
+let item_from_name ~folding name =
+   let get_name s = s in
+   let get_data _ = () in   
+   make_item ~folding ~get_name ~get_data name
 
 (* If [limit=(offset,count)], [preprocess] will force evaluation of the first
    [offset+count] elements of the sequence [seq], and return a sequence of at
@@ -592,20 +505,245 @@ let preprocess_file ?limit ~get_name ~get_data file =
   close_in channel;
   items
 
+let punctuation = [','; '.'; ';'; ':'; '?'; '!']
+
+(* TODO use all Unicode white space (see Ubase.is_space) and punctuation. *)
+                  
+(* Lazy sequence of all "words" separated by [ \t\n()] AND trimmed of their
+   trailing punctuation. "words" here are pairs (pos,len). *)
+let split_string s =
+  let maxlen = String.length s in
+  let rec loop i len punct () =
+    if i > maxlen then Seq.Nil
+    else if i = maxlen || let c = String.unsafe_get s i in
+            c = ' ' || c = '\t' || c = '\n' || c = '(' || c = ')'
+    then if len <> punct
+      then Seq.Cons ((i-len, len-punct), loop (i+1) 0 0)
+      else loop (i+1) 0 0 ()
+    else let punct =
+           if i < maxlen &&
+              let c = String.unsafe_get s i in List.mem c punctuation
+           then punct + 1 else if len = 0 then punct else 0 in
+      loop (i+1) (len+1) punct () in
+  loop 0 0 0
+    
+(* Lazy sequence of search items from the words in a string. *)
+let items_from_text ?(folding = default_casefolding) s =
+  let folding = casefolding_pair folding in
+  let get_name (i,len) = String.sub s i len in
+  let get_data (i,len) = (i, String.sub s i len) in
+  split_string s
+  |> Seq.map (make_item ~folding ~get_name ~get_data)
+
+(* Lazy sequence of (pos, words) from a channel. Punctuations at the end of
+   words are removed. *)
+let split_channel ch =
+  let word = Buffer.create 20 in
+  let punct = Buffer.create 5 in
+  let rec loop i eof () =
+    if eof then Seq.Nil
+    else let c, eof = try input_char ch, false
+           with End_of_file -> '\n', true in
+      if c = ' ' || c = '\t' || c = '\n' || c = '(' || c = ')'
+      then if Buffer.length word <> 0 (* length of word *) 
+        then begin (* we deliver the word *)
+          let s = Buffer.contents word in
+          let pos = i - Buffer.length word - Buffer.length punct in
+          Buffer.clear word;
+          Buffer.clear punct;
+          Seq.Cons ((pos, s), loop (i+1) eof)
+        end
+        else begin
+          Buffer.clear punct;
+          loop (i+1) eof ()
+        end
+      else 
+      if List.mem c punctuation then begin
+        Buffer.add_char punct c;
+        loop (i+1) eof ()
+      end
+      else begin (* c is not a punctuation *)
+        Buffer.add_buffer word punct;
+        Buffer.clear punct;
+        Buffer.add_char word c;
+        loop (i+1) eof ()
+      end
+  in
+  loop 0 false
+
+(* Lazy and mutable sequence of search items from the words from a channel. *)
+let items_from_channel ?(folding = default_casefolding) ch =
+  let folding = casefolding_pair folding in
+  let get_name (_,s) = s in
+  let get_data (i,s) = (i,s) in
+  split_channel ch
+  |> Seq.map (make_item ~folding ~get_name ~get_data)
+    
+(* Generating a stop function *)
 let make_stop ?count ?timeout () =
   let i = ref 0 in
   let t = Unix.gettimeofday () in
   fun _ -> incr i;
     (match count with
-    | Some count -> !i >= count
-    | None -> false) ||
+     | Some count -> !i >= count
+     | None -> false) ||
     match timeout with
     | Some timeout -> Unix.gettimeofday () -. t >= timeout
     | None -> false
-  
 
-(** String conversion utilities from Ubase *)
+
+(* Testing quality/defect of being a substring *)
+(***********************************************)
+
+type matching_defect =
+  | MD_EQUAL
+  | MD_SUBSTRING
+  | MD_CUSTOM of ((string * string) -> (string * string) -> int option)
+  (* A defect function need not be symmetric. The first argument is always the
+     search pattern and the second is the candidate data. *)
+
+let search_forward_opt reg s pos =
+  try Some (Str.search_forward reg s pos) with
+  | Not_found -> None
+
+
+let test_equal (name1,_) (name2,_) =
+  if String.equal name1 name2 then Some 0 else None
+
+let find_base ?(test = String.equal) items_seq base =
+  Seq.filter (fun p -> test base p.base) items_seq
+
+(* The "defect" returned by [test_substring c1 c2] is the position of
+   name1 inside name2 + the difference of lengths base2 - base1. *)
+(* If name1 is a substring of name2 then base1 is a substring of base2, hence
+   this difference is non negative. *)
+let test_substring (name1, base1) (name2, base2) =
+  let r = Str.regexp_string name1 in
+  search_forward_opt r name2 0
+  |> option_map (fun i -> i + String.length base2 - String.length base1)
+
+let defect_fn = function
+  | MD_EQUAL -> test_equal
+  | MD_SUBSTRING -> test_substring
+  | MD_CUSTOM f -> f
+
+
+(* Comuputing the distance in terms of accents substitutions and matching defect *)
+(*********************************************************************************)
+
+(* The first distance is the minimum number of substitutions on item1 and item2
+   (we take the sum) required to make them "equal".  It is more efficient if
+   item1 has fewer accents than item2. It also returns a pair of matching
+   substitutions, and degree of defect of the test (0=perfect match). If [dtest]
+   is not the default '=', the 'distance' can be no longer symmetric (as with
+   test_substring.) *)
+let distance ?(dtest = test_equal) item1 item2 =
+  match dtest (item1.utf8, item1.base) (item2.utf8, item2.base) with
+  | Some defect -> 0, Some ([], [], defect)
+  | None ->
+    (* We cannot stop at the first match, because unfortunately the Gray code we
+       use is not monotonous. A match at step n does not implies that there
+       cannot be a simpler match at a later step. *)
+    (* Remark: instead of two loops, we could fold over the cartesian product
+       (assuming we construct a cartesian product iterator). *)
+    let rec loop2 name1 seq2 (dist, subs, defect) =
+      match seq2 () with
+      | Seq.Nil -> dist, subs, defect
+      (* dist = distance between name1 and seq2. *)
+      | Seq.Cons (subs2, next) ->
+        let result =
+          let d2 = List.length subs2 in
+          if d2 >= dist (* then we don't need to test this. *)
+          then dist, subs, defect
+          else let name2 = apply_subs subs2 item2.utf8 in
+            match dtest (name1, item1.base) (name2, item2.base) with
+            | Some defect -> d2, Some subs2, defect
+            | None -> dist, subs, defect in
+        loop2 name1 next result in
+    let rec loop1 seq1 dist subs_pair =
+      match seq1 () with
+      | Seq.Nil -> dist, subs_pair
+      (* dist = total distance (sum) between seq1 and seq2 *)
+      | Seq.Cons (subs1, next) ->
+        let dist, subs_pair = 
+          let d1 = List.length subs1 in
+          if d1 >= dist then dist, subs_pair
+          else let name1 =  apply_subs subs1 item1.utf8 in
+            let seq2 = Subset.to_seq item2.subs in
+            let d2, s2, defect = loop2 name1 seq2 (dist, None, -1) in
+            min dist (d1 + d2), match s2 with
+            | None -> subs_pair
+            | Some subs2 -> Some (subs1, subs2, defect) in
+        loop1 next dist subs_pair in
+    let seq1 = Subset.to_seq item1.subs in
+    loop1 seq1 (String.length item1.utf8) None
+
+
+(* Searching *)
+(*************)
+
+(* Returns the lazy sequence of matching items using the [dtest] comparison
+   whose first entry is (given by) the provided [name]. Can be infinite.  The
+   [folding] parameter must be the same as the one used to create the
+   [items_seq] sequence. TODO combine them in a data structure. *)
+let find_name ?(folding = default_casefolding) ?(dtest = test_substring)
+    items_seq name =
+  let folding = casefolding_pair folding in
+  let item = item_from_name ~folding name in
+  (* We first reduce the search to the list of matching base items *)
+  let test s1 s2 = dtest (s1,"") (s2,"") <> None in
+  let reduce = find_base ~test items_seq item.base in
+  (* We iterate all items in reduce: *)
+  Seq.map (fun it ->
+      let d, subs_pair = distance ~dtest item it in
+      match subs_pair with
+      | None -> failwith "Probaly a wrong casefolding function."
+      (* Not found, this should not happen since the bases are the same. *)
+      | Some pair -> (d, it, pair)
+    ) reduce;;
+
+
+(* Convert the result of [find_name] to a sorted list. *)
+let get_result_list seq =
+  seq_to_list_rev seq
+  |> List.rev (* necessary to preserve the order of items with equal rank. *)
+  |> List.stable_sort (fun (dis1,_,def1) (dis2,_,def2) ->
+      match compare dis1 dis2 with
+      | 0 -> compare def1 def2
+      | d -> d)
+
+
+
+(* Search the string [name] within the sequence of search items [seq] and
+   returns the sorted list of data corresponding to matching items.  If [stop]
+   is not provided, the search will explore the whole sequence. Otherwise, the
+   search will stop when [stop item = true], where [item] is the current item in
+   [seq]. The argument [matching_stop] operates in a similar way, but is
+   executed only on matching items, and it has two arguments: [(distance,
+   item)]. *)
+let select_data ?(folding = default_casefolding) ?stop ?matching_stop
+    ?(matching_defect : matching_defect = MD_SUBSTRING) seq name =
+  let seq = match stop with
+    | None -> seq
+    | Some stop -> seq_stop stop seq in
+  let dtest = defect_fn matching_defect in
+  let matching = find_name ~folding ~dtest seq name in
+  let matching = match matching_stop with
+    | None -> matching
+    | Some stop ->
+      let stop (d,item,_) = stop (d, item) in
+      seq_stop stop matching in
+  get_result_list matching
+  |> List.map (fun (_,item,_) -> item.data)
+
+
+
+
+(* String conversion utilities from Ubase *)
 
 let isolatin_to_utf8 = Ubase.isolatin_to_utf8
 
 let utf8_to_ascii = Ubase.from_utf8_string ~malformed:"?" ~strip:""
+
+
+

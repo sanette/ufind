@@ -55,14 +55,14 @@ The search can be greatly modified by playing with two filters: {e casefolding}
    case-insensitive} search. Two strings that have the same image under this
    function will be considered equal (exact match).
 
-*)
+    This function is applied only in the preprocess stage, see below.  *)
 
 type casefolding =
-  | CF_D144 (** http://unicode.org/versions/latest/ch03.pdf page 157. *)
-  | CF_D145 (** http://unicode.org/versions/latest/ch03.pdf page 158. *)
-  | CF_D147 (** http://unicode.org/versions/latest/ch03.pdf page 158. *)
+  | CF_D144 (** {{:http://unicode.org/versions/latest/ch03.pdf}Unicode Core Spec}, page 157. *)
+  | CF_D145 (** {{:http://unicode.org/versions/latest/ch03.pdf}Unicode Core Spec}, page 158. *)
+  | CF_D147 (** {{:http://unicode.org/versions/latest/ch03.pdf}Unicode Core Spec}, page 158. *)
   | CF_NONE (** no transformation *)
-  | CF_LATIN144 (** D144 restricted to Latin letters *)
+  | CF_LATIN145 (** D145 restricted to Latin letters *)
   | CF_LATIN147 (** D147 restricted to Latin letters *)
   | CF_ASCII (** ASCII lowercase *)
   | CF_CUSTOM of (string -> string) (** any compatible function -- see below *)
@@ -90,12 +90,13 @@ type casefolding =
     - Equality of casefolded ASCII strings should be equivalent to equality of
    the strings obtained by applying [String.lowercase_ascii].
 
-   CUSTOM casefolding functions can be used for specific cases. For instance, a
-   useful one, {!capitalize_casefold}, is to combine a usual lower-case function
-   with capitalizing the first letter. In this way, "Ver" (or "ver") will match
-   with "Véronique" and "VÉRONIQUE" but not with "Prévert" or "PRÉVERT".
-
-*)
+    CUSTOM casefolding functions can be used for specific cases. For instance,
+   one can use {!capitalize_casefold}, which combines a usual lower-case
+   function with capitalizing the first letter. In this way we force the match
+   to happen at the start of the string: "Ver" (or "ver") will match with
+   "Véronique" and "VÉRONIQUE" but not with "Prévert" or "PRÉVERT". Of course,
+   the same result can be obtained by a simple {!matching_defect} function, see
+   below.  *)
 
 val capitalize_casefold : string -> string
 (* Standard UTF casefolding (D144) except for the first letter, which is
@@ -203,9 +204,9 @@ val preprocess : ?folding:casefolding ->
    whole [seq] is processed; hence if [seq] is infinite, it will never terminate
    until memory overflows.
 
-    In all [preprocess*] functions, the returned sequence is not mutable, and
-    will always point to the start of the source sequence. So there is no need
-   to reset it for each new search. *)
+    In all [preprocess*] functions, the returned sequence is not mutable, has no
+   side-effect, and will always point to the start of the source sequence. So
+   there is no need to reset it for each new search. *)
 
 val preprocess_list : ?folding:casefolding ->
   get_name:('a -> string) ->
@@ -215,9 +216,10 @@ val preprocess_list : ?folding:casefolding ->
 val preprocess_file : ?limit:int * int ->
   get_name:(string -> string) ->
   get_data:(string -> 'a) -> string -> 'a search_item Seq.t
-(** Open a file for searching, where each item must be encoded in a line. The
-   name field should be obtained by [get_name line], and the data field by
-   [get_data line]. Returns the sequence of pre-processed search items.  *) 
+(** Use this to search in a file, where each item must be encoded in a single
+   line. The name field should be obtained by [get_name line], and the data
+   field by [get_data line]. Returns the sequence of pre-processed search items.
+   *) 
 
 val items_from_seq : ?folding:casefolding ->
   get_name:('a -> string) ->
@@ -243,10 +245,37 @@ val items_from_names : ?folding:casefolding ->
    For faster searching, rather use [preprocess_list ~get_name:id ~get_data:id
    list], where [id x = x]. The only interest of [items_from_names] is when the
    list is really long and we don't want to duplicate it in memory. *)
-  
+
+val items_from_text : ?folding:casefolding -> string -> (int * string) search_item Seq.t
+(** [items_from_text text] immediately constructs a lazy list of search_item
+   corresponding to each word of the string [text], where word delimiters are 
+    [[ \t\n()]]. Usual punctuation signs are removed from the end of words.
+
+    The returned sequence is not mutable, and will always point to the start of
+   the text. So there is no need to reset it for each new search.
+
+    After searching with {!select_data}, the resulting data is a list of pairs
+   [(pos, word)] where [pos] is the position of the word in the original string.
+   *)
+
+val items_from_channel : ?folding:casefolding -> in_channel -> (int * string) search_item Seq.t
+
+(** [items_from_channel channel] immediately constructs a lazy list of
+   search_item corresponding to each word read from the [channel], where word
+   delimiters are [[ \t\n()]]. Usual punctuation signs are removed from the end
+   of words.
+
+    The resulting sequence is mutable, and will point to the current search
+   position in the channel, which is not closed by this function.
+
+ After searching with {!select_data}, the resulting data is a list of pairs
+   [(pos, word)] where [pos] is the byte position of the word in channel,
+   starting from the initial state of the channel.
+
+
+ *)
 (** {2 Search results}
 
-All search functions operate on a sequence of search_items. 
 *)
 
 val select_data :
