@@ -63,10 +63,11 @@ mysql> SELECT * FROM city LIMIT 5;
 The `world` function connects to mysql and gives you a handle to the
 `world` database.
 
-Then the `world_items` function returns a sequence of search items,
-where the search field is the `Name` of the city, and the data we want
-to return is a string including the `Name` field but also the
-`CountryCode` field, in the form "City: Paris, Country code: [FRA]".
+We want to search in the `city` table. The `world_items` function
+returns a sequence of search items, where the search field is the
+`Name` of the city, and the data we want to return is a string
+including the `Name` field but also the `CountryCode` field, in the
+form "City: Paris, Country code: [FRA]".
 
 Note that, like many Mysql databases unfortunately, its uses the
 `isolatin` encoding, so we have to convert it to `utf`.
@@ -110,9 +111,9 @@ let world () =
 
 Two possibilies:
 
-1. each search starts with a Mysql query
+1. Each search starts with a Mysql query.
 
-2. we load into memory the list of search items, and then each search
+2. We load into memory the list of search items, and then each search
 does not rely on the Mysql connection anymore.
 
 ```ocaml
