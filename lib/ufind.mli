@@ -1,8 +1,9 @@
 (** Case insensitive, accent insensitive search engine
 
-Ufind is a small library that provides a case insentitive, accent insensitive
-   search in strings encoded in utf8. It is meant to be easy to use, either for
-   searching simple lists, or for digging in large databases.
+    Ufind is a small {{:https://ocaml.org/}ocaml} library that provides a case
+   insentitive, accent insensitive search in strings encoded in utf8. It is
+   meant to be easy to use, either for searching simple lists, or for digging in
+   large databases.
 
  Thanks to {{:https://sanette.github.io/ubase/}Ubase}, accents and more general
    diacritics are recognized for all Latin characters.  For other
@@ -221,6 +222,15 @@ val preprocess_file : ?limit:int * int ->
    field by [get_data line]. Returns the sequence of pre-processed search items.
    *) 
 
+(** The [items_from*] functions below, contrary to the [preprocess*] functions,
+   immediately return a lazy sequence of [search_item]s that will be evaluated
+   on-the-fly when needed. They may be mutable on not, depending on the nature
+   of the source sequence they depend upon.
+
+    If needed, any sequence of [search_item]s can be transformed into a
+   preprocessed one by applying {!seq_eval}.  *)
+
+
 val items_from_seq : ?folding:casefolding ->
   get_name:('a -> string) ->
   get_data:('a -> 'b) -> 'a Seq.t -> 'b search_item Seq.t
@@ -316,6 +326,13 @@ val make_stop : ?count:int -> ?timeout:float -> unit -> 'a -> bool
 
 val seq_to_list_rev : 'a Seq.t -> 'a list
 (** Evaluate the whole sequence and convert it to a list, in reverse order. *)
+
+val list_to_seq : 'a list -> 'a Seq.t
+(** Immediately return a lazy sequence from the given list. *)
+    
+val seq_eval : 'a Seq.t -> 'a Seq.t
+(** Evaluate the whole sequence and return a new sequence with the evaluated
+   values. *)
 
 val seq_truncate : int -> int -> 'a Seq.t -> 'a Seq.t
 (** (Half)-immediate truncation of a sequence. [seq_truncate offset count seq]

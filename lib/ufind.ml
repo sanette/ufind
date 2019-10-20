@@ -270,6 +270,13 @@ let rec list_to_seq = function
   | [] -> Seq.empty
   | x::rest -> fun () -> Seq.Cons (x, list_to_seq rest)
 
+(* Evaluate the whole sequence and return a new sequence with the evaluated
+   values. *)
+let seq_eval seq =
+  seq_to_list_rev seq
+  |> List.rev
+  |> list_to_seq
+  
 (* Returns the sequence starting at the nth element (starting from n=0), or the
    empty sequence if the sequence is not long enough. NOT lazy: the elements
    before the nth element are immediately evaluated. *)

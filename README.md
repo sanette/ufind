@@ -1,9 +1,9 @@
 # Case insensitive, accent insensitive search engine
 
-__Ufind__ is a small library that provides a case insentitive, accent
-insensitive search in strings encoded in utf8. It is meant to be easy
-to use, either for searching simple lists, or for digging in large
-databases.
+__Ufind__ is a small [ocaml](https://ocaml.org/) library that
+provides a case insentitive, accent insensitive search in strings
+encoded in utf8. It is meant to be easy to use, either for searching
+simple lists, or for digging in large databases.
 
 Accents and more general diacritics are recognized for all Latin
  characters.  For other alphabets, searching will remain accent
