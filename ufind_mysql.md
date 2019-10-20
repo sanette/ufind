@@ -132,10 +132,12 @@ does not rely on the Mysql connection anymore.
   let rio = Ufind.select_data items "río" in
   List.iter print_endline rio;
 
-(* 2. No Mysql connection required *)
+(* 2A. Preprocessing *)
 
   print_endline "\nPreprocessing the whole database in memory.";
   let pitems = Ufind.seq_eval (world_items db) in
+
+(* 2B. No Mysql connection required *)
 
   print_endline "\nLooking for 'paris':";
   let paris = Ufind.select_data pitems "paris" in
