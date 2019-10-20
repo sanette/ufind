@@ -230,13 +230,11 @@ let from_utf8_string_with_subs ?strip s : string * substitution =
     | `Malformed _ ->
       Buffer.add_string b malformed;
       subs := (pos, (Malformed, malformed)) :: !subs
-    | `Uchar u ->
-      try
-        let t = Ubase.uchar_to_string u in
-        Buffer.add_string b t;
+    | `Uchar u -> match Ubase.uchar_to_string u with
+      | t -> Buffer.add_string b t;
         if Uchar.to_int u > 127
         then subs := (pos, (Uchar, t)) :: !subs
-      with Not_found -> match strip with
+      | exception Not_found -> match strip with
         | None -> Uutf.Buffer.add_utf_8 b u
         | Some strip ->
           Buffer.add_string b strip;
@@ -266,6 +264,13 @@ let seq_to_list_rev seq =
   Seq.fold_left (fun list x -> x::list) [] seq
 
 (* This function is lazy and returns immediately (no loop) *)
+(* The recursive call is not tail recursive, but this doesn't seem to be a
+   problem, because the sequence is sequentially evaluated, never 'all at
+   once'. So even for a very long list, the iteration (or folding) of the
+   sequence will NOT trigger stack overflow.
+
+   The same remark applies for [seq_truncate, seq_stop, seq_split, split_string,
+   split_channel].  *)
 let rec list_to_seq = function
   | [] -> Seq.empty
   | x::rest -> fun () -> Seq.Cons (x, list_to_seq rest)
@@ -284,7 +289,7 @@ let rec seq_skip n seq =
   if n <= 0 then seq
   else match seq () with
     | Seq.Nil -> Seq.empty
-    | Seq.Cons (_, next) -> seq_skip (n-1) next
+    | Seq.Cons (_, next) -> seq_skip (n-1) next  (* tailrec *)
                               
 (* (Half)-immediate truncation of a sequence (not lazy: element before #start
    will be evaluated. But no other element.) The number of items in the returned
@@ -298,7 +303,7 @@ let seq_truncate start length seq =
         | Seq.Nil -> Seq.Nil
         | Seq.Cons (x, next) -> Seq.Cons (x, loop (i+1) next)
   in
-    loop 0 seq
+  loop 0 seq
 
 (* Lazy truncation of the sequence. When evaluated, the sequence will stop just
    after the function [stop] evaluated on an element returns true. For instance
@@ -314,7 +319,10 @@ let seq_split seq =
   let rec loop seq () =
     match seq () with
     | Seq.Nil -> Seq.Nil
-    | Seq.Cons (x, next) -> seq2:=next; Seq.Cons (x, loop next) in
+    | Seq.Cons (x, next) -> begin
+        seq2:=next;
+        Seq.Cons (x, loop next)
+      end in
   loop seq, fun () -> !seq2 ()
 
 (* In order to test sequences and side-effects, it is useful to consider a sequence like this:
@@ -521,17 +529,19 @@ let punctuation = [','; '.'; ';'; ':'; '?'; '!']
 let split_string s =
   let maxlen = String.length s in
   let rec loop i len punct () =
+    (* i is the current position, and len is the current length of the word at
+       position i. punct is the length of trailing punctuation. *)
     if i > maxlen then Seq.Nil
     else if i = maxlen || let c = String.unsafe_get s i in
             c = ' ' || c = '\t' || c = '\n' || c = '(' || c = ')'
     then if len <> punct
       then Seq.Cons ((i-len, len-punct), loop (i+1) 0 0)
-      else loop (i+1) 0 0 ()
+      else (loop [@tailcall]) (i+1) 0 0 ()
     else let punct =
            if i < maxlen &&
               let c = String.unsafe_get s i in List.mem c punctuation
            then punct + 1 else if len = 0 then punct else 0 in
-      loop (i+1) (len+1) punct () in
+      (loop [@tailcall]) (i+1) (len+1) punct () in
   loop 0 0 0
     
 (* Lazy sequence of search items from the words in a string. *)
@@ -559,21 +569,22 @@ let split_channel ch =
           Buffer.clear word;
           Buffer.clear punct;
           Seq.Cons ((pos, s), loop (i+1) eof)
+          (* = not tailrec, but see [seq_to_list_rev]. *)
         end
         else begin
           Buffer.clear punct;
-          loop (i+1) eof ()
+          (loop [@tailcall]) (i+1) eof ()
         end
       else 
       if List.mem c punctuation then begin
         Buffer.add_char punct c;
-        loop (i+1) eof ()
+        (loop [@tailcall]) (i+1) eof ()
       end
       else begin (* c is not a punctuation *)
         Buffer.add_buffer word punct;
         Buffer.clear punct;
         Buffer.add_char word c;
-        loop (i+1) eof ()
+        (loop [@tailcall]) (i+1) eof ()
       end
   in
   loop 0 false

@@ -12,13 +12,21 @@ opam install mysql
 
 but adapting to other types of databases should be quite obvious.
 
-## First use the database capabilities
+## First use Mysql capabilities
 
-A database is _meant_ for very quick searching in very large sets of
-data.  So, the first thing to do is to _narrow your search_ first, by
-executing a relevent query. On the other hand, databases are not
-always very good at handling Unicode encodings and searching, this is
-where `Ufind` enters the picture, but _only as a second step_.
+A database engine is _meant_ for very quick searching in
+very large sets of data.  So, the first thing to do is to _narrow our
+search_ first, by executing a relevent query, for instance using
+"LIKE", as in:
+
+```
+"SELECT * FROM city WHERE Name LIKE '%paris%'"
+```
+
+On the other hand, databases are not always very good at handling
+Unicode encodings and searching, and the results are not ranked by
+relevance: this is where `Ufind` enters the picture, but _only as a
+second step_. In this document we only focus on this second step.
 
 ## The world database
 
@@ -32,7 +40,7 @@ Once you have downloaded it, connect to Mysql and insert the file as follows:
 mysql> SOURCE world.sql;
 ```
 
-This table has the following structure:
+This database has the following structure:
 
 ```
 mysql> SHOW tables;
