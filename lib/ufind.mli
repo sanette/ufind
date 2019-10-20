@@ -361,3 +361,9 @@ val isolatin_to_utf8 : string -> string
 val utf8_to_ascii : string -> string
 (** Convert to ASCII by removing all accents on Latin letters, and ignoring all
    non-ascii chars or non-Latin letters. *)
+
+(** {2 Mysql interface} 
+
+See {{:https://github.com/sanette/ufind/blob/master/ufind_mysql.md}an example here}.
+
+*)
