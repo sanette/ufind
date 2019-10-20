@@ -57,6 +57,7 @@ The string "Olivia Apodaca" came first, because the substring "ap" is
 present without any accent substitution. If we searched "áp" instead,
 the order of the results would have been inverted.
 
+See also the `test` directory for more examples.
 
 ## Install
 
@@ -65,6 +66,9 @@ dune build
 opam install .
 ```
 
+## Interfacing MYSQL
+
+See [ufind_mysql.md](https://github.com/sanette/ufind/blob/master/ufind_mysql.md)
 
 ## Test results
 

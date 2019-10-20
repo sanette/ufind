@@ -58,7 +58,7 @@ mysql> SELECT * FROM city LIMIT 5;
 5 rows in set (0.00 sec)
 ```
 
-## Ufind_mysql: 1. create a sequence of search items
+## Create a sequence of search items
 
 The `world` function connects to mysql and gives you a handle to the
 `world` database.
@@ -107,7 +107,7 @@ let world () =
   quick_connect ~database:"world" ~user:"......." ~password:"......."  ()
 ```
 
-## Ufind_mysql 2. Searching
+## Searching
 
 Two possibilies:
 
