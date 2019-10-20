@@ -29,6 +29,12 @@ https://downloads.mysql.com/docs/world.sql.gz
 Once you have downloaded it, connect to Mysql and insert the file as follows:
 
 ```
+mysql> SOURCE world.sql;
+```
+
+This table has the following structure:
+
+```
 mysql> SHOW tables;
 +-----------------+
 | Tables_in_world |
@@ -38,11 +44,7 @@ mysql> SHOW tables;
 | countrylanguage |
 +-----------------+
 3 rows in set (0.00 sec)
-```
 
-This table has the following structure:
-
-```
 mysql> SELECT * FROM city LIMIT 5;
 +----+----------------+-------------+---------------+------------+
 | ID | Name           | CountryCode | District      | Population |
@@ -65,6 +67,9 @@ Then the `world_items` function returns a sequence of search items,
 where the search field is the `Name` of the city, and the data we want
 to return is a string including the `Name` field but also the
 `CountryCode` field, in the form "City: Paris, Country code: [FRA]".
+
+Note that, like many Mysql databases unfortunately, its uses the
+`isolatin` encoding, so we have to convert it to `utf`.
 
 
 ```ocaml
@@ -98,7 +103,7 @@ let world_items db =
   Ufind.items_from_seq ~get_name ~get_data (seq ());;
   
 let world () =
-  quick_connect ~database:"world" ~user:"san" ~password:"sanette"  ()
+  quick_connect ~database:"world" ~user:"......." ~password:"......."  ()
 ```
 
 ## Ufind_mysql 2. Searching
