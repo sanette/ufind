@@ -394,6 +394,12 @@ val seq_truncate : int -> int -> 'a Seq.t -> 'a Seq.t
    This operation is not entirely lazy: elements before #[offset] will be
    evaluated. But no other element.  *)
 
+val seq_stop : ('a -> bool) -> 'a Seq.t -> 'a Seq.t
+(** [seq_stop stop seq] returns a lazy truncation of the sequence [seq]. When
+   evaluated, the sequence will stop just after the function [stop] evaluated on
+   an element returns true. For instance [stop] can be a timer, see
+   {!make_stop}. *)
+
 val seq_split : 'a Seq.t -> 'a Seq.t * 'a Seq.t
 (** Dynamic splittig of a sequence. If [s1,s2 = seq_split seq] then [s2] will
    always start after the last evaluated element of [s1].
