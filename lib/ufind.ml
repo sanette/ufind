@@ -325,6 +325,10 @@ let seq_split seq =
       end in
   loop seq, fun () -> !seq2 ()
 
+(* TODO seq_append *)
+
+
+
 (* In order to test sequences and side-effects, it is useful to consider a sequence like this:
 
 let seq = list_to_seq ["1";"2";"3";"4";"5"];;
@@ -597,17 +601,22 @@ let items_from_channel ?(folding = default_casefolding) ch =
   split_channel ch
   |> Seq.map (make_item ~folding ~get_name ~get_data)
     
-(* Generating a stop function *)
+(* Generating a stop function, and a flag function indicating if the stop was
+   triggered. *)
 let make_stop ?count ?timeout () =
+  let triggered = ref false in
   let i = ref 0 in
   let t = Unix.gettimeofday () in
-  fun _ -> incr i;
+  (fun _ -> incr i;
     (match count with
-     | Some count -> !i >= count
+     | Some count -> !i >= count &&
+                     (triggered := true; true)
      | None -> false) ||
     match timeout with
-    | Some timeout -> Unix.gettimeofday () -. t >= timeout
-    | None -> false
+    | Some timeout -> Unix.gettimeofday () -. t >= timeout &&
+                      (triggered := true; true)
+    | None -> false),
+  (fun () -> !triggered)
 
 
 (* Testing quality/defect of being a substring *)
@@ -700,36 +709,46 @@ let distance ?(dtest = test_equal) item1 item2 =
 (* Searching *)
 (*************)
 
-(* Returns the lazy sequence of matching items using the [dtest] comparison
+module Matching = struct
+
+  type 'a item = int * ('a search_item) *
+                 ((int * (replacement * string)) list *
+                  (int * (replacement * string)) list * int)
+
+  let data (_,it,_) = it.data
+  (** Extract the data from the matching item. *)
+                        
+  (* Returns the lazy sequence of matching items using the [dtest] comparison
    whose first entry is (given by) the provided [name]. Can be infinite.  The
    [folding] parameter must be the same as the one used to create the
    [items_seq] sequence. TODO combine them in a data structure. *)
-let find_name ?(folding = default_casefolding) ?(dtest = test_substring)
-    items_seq name =
-  let folding = casefolding_pair folding in
-  let item = item_from_name ~folding name in
-  (* We first reduce the search to the list of matching base items *)
-  let test s1 s2 = dtest (s1,"") (s2,"") <> None in
-  let reduce = find_base ~test items_seq item.base in
-  (* We iterate all items in reduce: *)
-  Seq.map (fun it ->
-      let d, subs_pair = distance ~dtest item it in
-      match subs_pair with
-      | None -> failwith "Probaly a wrong casefolding function."
-      (* Not found, this should not happen since the bases are the same. *)
-      | Some pair -> (d, it, pair)
-    ) reduce;;
+  let find ?(folding = default_casefolding) ~matching_defect
+      items_seq name =
+    let folding = casefolding_pair folding in
+    let dtest = defect_fn matching_defect in
+    let item = item_from_name ~folding name in
+    (* We first reduce the search to the list of matching base items *)
+    let test s1 s2 = dtest (s1,"") (s2,"") <> None in
+    let reduce = find_base ~test items_seq item.base in
+    (* We iterate all items in reduce: *)
+    Seq.map (fun it ->
+        let d, subs_pair = distance ~dtest item it in
+        match subs_pair with
+        | None -> failwith "Probaly a wrong casefolding function."
+        (* Not found, this should not happen since the bases are the same. *)
+        | Some pair -> (d, it, pair)
+      ) reduce;;
 
-
-(* Convert the result of [find_name] to a sorted list. *)
-let get_result_list seq =
-  seq_to_list_rev seq
-  |> List.rev (* necessary to preserve the order of items with equal rank. *)
-  |> List.stable_sort (fun (dis1,_,def1) (dis2,_,def2) ->
-      match compare dis1 dis2 with
-      | 0 -> compare def1 def2
-      | d -> d)
-
+  (* Convert the result of [find] to a sorted list. *)
+  let to_list seq =
+    seq_to_list_rev seq
+    |> List.rev (* necessary to preserve the order of items with equal rank. *)
+    |> List.stable_sort (fun (dis1,_,def1) (dis2,_,def2) ->
+        match compare dis1 dis2 with
+        | 0 -> compare def1 def2
+        | d -> d)
+      
+end
 
 
 (* Search the string [name] within the sequence of search items [seq] and
@@ -744,15 +763,14 @@ let select_data ?(folding = default_casefolding) ?stop ?matching_stop
   let seq = match stop with
     | None -> seq
     | Some stop -> seq_stop stop seq in
-  let dtest = defect_fn matching_defect in
-  let matching = find_name ~folding ~dtest seq name in
+  let matching = Matching.find ~folding ~matching_defect seq name in
   let matching = match matching_stop with
     | None -> matching
     | Some stop ->
       let stop (d,item,_) = stop (d, item) in
       seq_stop stop matching in
-  get_result_list matching
-  |> List.map (fun (_,item,_) -> item.data)
+  Matching.to_list matching
+  |> List.map Matching.data
 
 
 

@@ -293,26 +293,77 @@ val select_data :
   ?stop:('a search_item -> bool) ->
   ?matching_stop:(int * 'a search_item -> bool) ->
   ?matching_defect:matching_defect -> 'a search_item Seq.t -> string -> 'a list
-(** [select_data seq name] searches for the string [name] within the sequence of
-   search items [seq] and returns the sorted list of data corresponding to
+(** [select_data items name] searches for the string [name] within the sequence
+   of search items [items] and returns the sorted list of data corresponding to
    matching items.
 
    If [stop] is not provided, the search will explore the whole
    sequence. Otherwise, the search will stop after processing the first [item]
-   in [seq] for which [stop item = true]. The argument [matching_stop] operates
-   in a similar way, but is executed only on matching items, and its argument is
-   the couple [(distance, item)]. *)
+   in [items] for which [stop item = true]. The argument [matching_stop]
+   operates in a similar way, but is executed only on matching items, and its
+   argument is the couple [(distance, item)].
 
-val make_stop : ?count:int -> ?timeout:float -> unit -> 'a -> bool
-(** [make_stop ~count ~timeout ()] creates a 'stop' function suitable for use
-   in {!select_data}.
+    The [folding] parameter must be the same as the one used to create the
+   [items] sequence.
 
-    It will stop after processing [count] elements, or when the [timeout] (in
-   seconds) is elapsed. Note that the timer starts as soon at the unit argument
-   [()] is provided. 
+ *)
+
+val make_stop : ?count:int -> ?timeout:float -> unit ->
+  ('a -> bool) * (unit -> bool)
+(** [make_stop ~count ~timeout ()] returns the pair [(stop, flag)], where [stop]
+   is a 'stop' function suitable for use in {!select_data}; and [flag] is a
+   function that returns [true] when the stop test is effectively triggered.
+
+    When used with {!select_data}, the search will stop after processing [count]
+   elements, or when the [timeout] (in seconds) is elapsed. Note that the timer
+   starts as soon at the unit argument [()] is provided.
 
     The stop function has to be created again after each use.
-*)
+
+    In conjunction with {!seq_split}, the [flag] can be used to resume a
+    previously stopped search, as follows.
+    
+    {[let seq1, seq2 = seq_split items in
+      let stop, flag = make_stop ~count:10 () in
+      let result = select_data ~stop seq1 name in
+    if flag () then begin
+      print_endline "The search was interrupted. We resume it.";
+      let result2 = select_data seq2 name in
+      (* ...now the complete result is the union {result,result2}, 
+            but the global ranking is lost... *)
+    end else print_endline "The search was complete."]}
+
+  *)
+
+(** Obtaining detailed matching results
+
+In order to obtain a global ranking of results obtained from different searches,
+   use {!find} and {!to_list} instead of {!select_data}.
+
+ *)
+module Matching : sig
+  type 'a item
+       (** Matching item. *)
+
+  val data : 'a item -> 'a
+  (** Extract the data from the matching item. *)
+    
+  val find : ?folding:casefolding -> matching_defect:matching_defect ->
+    'a search_item Seq.t -> string -> 'a item Seq.t
+  (** [find sitems name] immediately returns the lazy sequence of {!item}s
+     matching the given [name] in the sequence of search items [sitems]. The
+     returned sequence may be infinite if [sitems] is infinite.
+
+      The [matching_defect] parameter defines the function used for matching:
+     its first entry is (given by) the provided [name].
+
+      Warning: the [folding] parameter must be the same as the one used to
+     create the [sitems] sequence. *)
+
+  val to_list : 'a item Seq.t -> 'a item list
+  (** Convert the result of [find] to a sorted list. *)
+      
+end
 
 (** {1 Utilities} *)
 
