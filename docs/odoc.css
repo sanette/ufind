@@ -253,9 +253,7 @@ tt, code, pre {
 }
 
 pre {
-  padding: 0.1em;
-  border: 1px solid #eee;
-  border-radius: 5px;
+  border-left: 1px solid #ccc;
   overflow-x: auto;
 }
 
@@ -285,11 +283,11 @@ pre code {
 /* Module member specification */
 
 .spec:not(.include), .spec.include details summary {
-  background-color: #f6f8fa;
-  border-radius: 3px;
-  border-left: 4px solid #5c9cf5;
-  border-right: 5px solid transparent;
-  padding: 0.35em 0.5em;
+    background: linear-gradient(to left, rgb(253, 252, 252) 0%, rgb(234, 246, 250) 100%);
+    border-radius: 3px;
+    border-left: 4px solid #5c9cf5;
+    border-right: 5px solid transparent;
+    padding: 0.35em 0.5em;
 }
 
 .spec.include details summary:hover {
@@ -596,7 +594,7 @@ h1+.modules, h1+.sel {
   max-width: 30ex;
   min-width: 26ex;
   width: 20%;
-  background: #f6f8fa;
+  background: linear-gradient(to left, #ccc, transparent);
   overflow: auto;
   color: #1F2D3D;
   padding-left: 2ex;
@@ -684,6 +682,16 @@ h1+.modules, h1+.sel {
   overflow-x: auto;
 }
 
+.ocaml {
+    background: linear-gradient(to left, white 0%, rgb(243, 247, 246) 100%);
+}
+
+span.arrow {
+    font-size: 20px;
+    line-height: 8pt;
+    font-family: "Fira Mono";
+}
+
 .hljs-comment,
 .hljs-meta {
   color: #969896;
@@ -762,4 +770,5 @@ h1+.modules, h1+.sel {
    ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
    OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
   ---------------------------------------------------------------------------*/
+header nav {display: none;} header nav.toc {display: block;} header dl dd, header dl dt {display: inline-block;} 
 header nav {display: none;} header nav.toc {display: block;} header dl dd, header dl dt {display: inline-block;} 
