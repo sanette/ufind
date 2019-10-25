@@ -369,6 +369,12 @@ end
 
 (** {2 Sequences}
 
+Sequences, or "delayed lists" is a standard data type in ocaml, see
+   {{:https://caml.inria.fr/pub/docs/manual-ocaml/libref/Seq.html}here}. They
+   represent lists where each element is obtained by evaluating some function,
+   and the evaluation is "lazy", {e i.e.} is done only when absolutely needed.
+
+
     {e (In order to keep the Ufind library compatible with ocaml 4.05, the newer
    [Seq] functions that appeared in 4.07 are not used.)}
 
@@ -386,10 +392,11 @@ val seq_eval : 'a Seq.t -> 'a Seq.t
    values. *)
 
 val seq_truncate : int -> int -> 'a Seq.t -> 'a Seq.t
-(** (Half)-immediate truncation of a sequence. [seq_truncate offset count seq]
-   returns a sequence of length [count] (or less in case the initial sequence
-   is too short) containing the elements of the initial [seq] starting at the
-   [offset]-eth element.
+(** (Half)-immediate truncation of a sequence.
+
+    [seq_truncate offset count seq] returns a sequence of length [count] (or
+   less in case the initial sequence is too short) containing the elements of
+   the initial [seq] starting at the [offset]-eth element.
 
    This operation is not entirely lazy: elements before #[offset] will be
    evaluated. But no other element.  *)
@@ -416,8 +423,14 @@ val isolatin_to_utf8 : string -> string
 (** Convert ISO_8859_1 to UTF8 *)
 
 val utf8_to_ascii : string -> string
-(** Convert to ASCII by removing all accents on Latin letters, and ignoring all
-   non-ascii chars or non-Latin letters. *)
+(** Convert to ASCII by removing all accents on Latin letters, and removing all
+   other non-ascii chars or non-Latin letters.
+
+    Example:
+{[
+# utf8_to_ascii "¡Déjà vu!";;
+- : string = "Deja vu!"
+]} *)
 
 (** {2 Mysql interface} 
 
