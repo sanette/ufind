@@ -218,9 +218,10 @@ val preprocess_file : ?limit:int * int ->
   get_name:(string -> string) ->
   get_data:(string -> 'a) -> string -> 'a search_item Seq.t
 (** Use this to search in a file, where each item must be encoded in a single
-   line. The name field should be obtained by [get_name line], and the data
-   field by [get_data line]. Returns the sequence of pre-processed search items.
-   *) 
+   line.
+
+The name field should be obtained by [get_name line], and the data field by
+   [get_data line]. Returns the sequence of pre-processed search items.  *) 
 
 (** The [items_from*] functions below, contrary to the [preprocess*] functions,
    immediately return a lazy sequence of [search_item]s that will be evaluated
@@ -269,7 +270,6 @@ val items_from_text : ?folding:casefolding -> string -> (int * string) search_it
    *)
 
 val items_from_channel : ?folding:casefolding -> in_channel -> (int * string) search_item Seq.t
-
 (** [items_from_channel channel] immediately constructs a lazy list of
    search_item corresponding to each word read from the [channel], where word
    delimiters are [[ \t\n()]]. Usual punctuation signs are removed from the end
@@ -282,8 +282,8 @@ val items_from_channel : ?folding:casefolding -> in_channel -> (int * string) se
    [(pos, word)] where [pos] is the byte position of the word in channel,
    starting from the initial state of the channel.
 
-
- *)
+*)
+    
 (** {2 Search results}
 
 *)
@@ -337,8 +337,10 @@ val make_stop : ?count:int -> ?timeout:float -> unit ->
 
 (** Obtaining detailed matching results
 
-In order to obtain a global ranking of results obtained from different searches,
-   use {!find} and {!to_list} instead of {!select_data}.
+    Use this module if {!select_data} is not sufficient for your needs.
+
+For instance, in order to obtain a global ranking of results obtained from
+   different searches, use {!find} and {!to_list} instead of {!select_data}.
 
  *)
 module Matching : sig
@@ -392,11 +394,10 @@ val seq_eval : 'a Seq.t -> 'a Seq.t
    values. *)
 
 val seq_truncate : int -> int -> 'a Seq.t -> 'a Seq.t
-(** (Half)-immediate truncation of a sequence.
-
-    [seq_truncate offset count seq] returns a sequence of length [count] (or
-   less in case the initial sequence is too short) containing the elements of
-   the initial [seq] starting at the [offset]-eth element.
+(** (Half)-immediate truncation of a sequence.  [seq_truncate offset count seq]
+   returns a sequence of length [count] (or less in case the initial sequence is
+   too short) containing the elements of the initial [seq] starting at the
+   [offset]-eth element.
 
    This operation is not entirely lazy: elements before #[offset] will be
    evaluated. But no other element.  *)
