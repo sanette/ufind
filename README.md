@@ -30,9 +30,9 @@ possible accented versions of a word.
 
 ## Example
 
-For searching a substring in a list of strings, you only need two
-lines of code.  Here we use the `sample` list of names that can be
-found in the test directory.
+For searching a substring in a list of strings, we only need two lines
+of code.  Here we use the `sample` list of names that can be found in
+the test directory.
 
 First we prepare the data:
 
@@ -97,18 +97,18 @@ Juan Sebastián Emilio Saucedo Tijerina
 
 Simple Test OK.
 
-Generating random list of 100000 strings. Time = 0.046291 sec
-Searching for nonexistent string 'xxéço' in lazy sequence. Time = 0.104921 sec
-Preprocessing items from list of 100000 elements. Time = 0.114353 sec
-Searching for nonexistent string 'xxéço' in preprocessed sequence. Time = 0.049042 sec
-Searching for probable string 'ïlo' in lazy sequence. Time = 0.102672 sec
-Ïlo,Ïlo,Ïlo,Ïlo,Ïlo,Ïlop,Wïlo,Ïlolà,Jïlo,Ïlomó,Ïlomy,Sïlov,Ïlosàl,Ïlolag,Ïlocïk,Nïlot,Ïlosík,Cïloc,Nïlowí,Tïlogó,Esïlo,Ejïlox,Éhïlo,Edïlod,Ørïlov,Diqïlo,Áfïlof,Básïlo,Jösïlo,Lørïlo,Jàkïlo,Qïsïlo,Síqïlo,Ïló,Ïlø,Ïlø,Ïlö,Ïlö,Ïlø,Ïló,Ïló,Ïlø,Ïløs,Ïlør,Ïlód,Ïlóp,Ïlök,Ïlóx,Ïlöba,Ïlóci,Ïlödo,Ïlögàs,Ïlómób,Ïløzup,Ïlørùn,Ïløquv,Ïlórïd,Lïlö,Bïlö,Zïlö,Vïló,Pïlø,Xïlö,Rïló,Rïló,Zïlög,Sïlóg,Dïløj,Wïlös,Vïlöv,Qïlón,Nïlød,Wïlód,Pïlöqà,Gïløré,Qïlöfo,Rïlöfø,Cïlójo,Fïlóho,Ulïlø,Igïlø,Akïlø,Iqïløn,Orïløj,Egïlös,Ókïlö,Ézïlø,Ékïlø,Àmïlø,Èwïló,Èbïlö,Øtïlö,Fokïlø,Óbïløp,Àtïlöj,Àzïlöv,Àcïlóm,Tamïlø,Àhïlöw,Fujïlö,Bödïlö,Sídïló,Søcïló,Ilo,Ilo,Ilof,Lilo,Wilo,Ilowí,Iloge,Bilol,Ilotíj,Tilov,Ilofïr,Ilojog,Wilocu,Tiloli,Jilocè,Liloly,Hilotu,Izilom,Xuwilo,Jíhilo,Ílo,Ílo,Ílo,Ílok,Ílojá,Ílonø,Ílowí,Ílocè,Ílodøm,Dílo,Zílo,Rílo,Pílo,Kílo,Wílor,Sílowù,Tílorí,Líloru,Orílo,Uzílol,Ylílok,Ilö,Ilö,Ilø,Ilö,Iló,Ilö,Iló,Ilö,Ilög,Iløt,Ilós,Ilóq,Ilód,Ilöz,Ilóme,Ilósa,Ilömù,Ilöbàc,Ilögöd,Ilömøj,Ilómaz,Ilórík,Ørílo,Ïtílo,Hoxílo,Viló,Rilö,Cilø,Tilø,Dilö,Siló,Miló,Filø,Kilø,Wilø,Hiló,Giløx,Niløb,Qiløg,Nilóv,Biløs,Giløs,Kiløn,Diløm,Gilöb,Lilós,Kilóc,Lilöj,Hiløp,Kiløhø,Qilötà,Ciløwá,Silóci,Milöto,Qilömó,Silófo,Pilønà,Pápílo,Yjilö,Azilø,Oxilø,Ejilót,Àfilø,Ørilø,Ïdiló,Ïdiló,Èhiløp,Jahiló,Ïbiløh,Áhiløg,Modilø,Ékilöl,Àsiløx,Lèvilö,Sùwilö,Ílö,Íló,Ílø,Ílö,Íló,Íló,Íløk,Ílóx,Íløc,Íløj,Ílöh,Ílöd,Ílöc,Íløt,Ílóv,Ílöz,Ílóp,Ílós,Íløh,Íløq,Íløk,Ílöwï,Ílöxù,Ílörà,Ílóhù,Ílóve,Íløqï,Ílóze,Ílómù,Ílójög,Ílójag,Xíló,Níló,Hílø,Nílø,Gílö,Hílöl,Nílök,Kíløm,Xílöv,Fílök,Xílóf,Lílóh,Vílømø,Bílöwi,Qílöny,Cílöjï,Qíløha,Ohíló,Yníló,Osíló,Oqílö,Uwílón,Öhíló,Ècílø,Ídílø,Ívílø,Èhílø,Èsílö,Ùrílø,Ézíløh,Ídíløk,Àxílød,Ùbílód,Ønílód,Míbílö,Føcílö,Qïnílö,Møjílö,Qírílö,Qókíló,Sámíló,Sítílø
-Searching for probable string 'ïlo' in preprocessed sequence. Time = 0.048762 sec
-Ïlo,Ïlo,Ïlo,Ïlo,Ïlo,Ïlop,Wïlo,Ïlolà,Jïlo,Ïlomó,Ïlomy,Sïlov,Ïlosàl,Ïlolag,Ïlocïk,Nïlot,Ïlosík,Cïloc,Nïlowí,Tïlogó,Esïlo,Ejïlox,Éhïlo,Edïlod,Ørïlov,Diqïlo,Áfïlof,Básïlo,Jösïlo,Lørïlo,Jàkïlo,Qïsïlo,Síqïlo,Ïló,Ïlø,Ïlø,Ïlö,Ïlö,Ïlø,Ïló,Ïló,Ïlø,Ïløs,Ïlør,Ïlód,Ïlóp,Ïlök,Ïlóx,Ïlöba,Ïlóci,Ïlödo,Ïlögàs,Ïlómób,Ïløzup,Ïlørùn,Ïløquv,Ïlórïd,Lïlö,Bïlö,Zïlö,Vïló,Pïlø,Xïlö,Rïló,Rïló,Zïlög,Sïlóg,Dïløj,Wïlös,Vïlöv,Qïlón,Nïlød,Wïlód,Pïlöqà,Gïløré,Qïlöfo,Rïlöfø,Cïlójo,Fïlóho,Ulïlø,Igïlø,Akïlø,Iqïløn,Orïløj,Egïlös,Ókïlö,Ézïlø,Ékïlø,Àmïlø,Èwïló,Èbïlö,Øtïlö,Fokïlø,Óbïløp,Àtïlöj,Àzïlöv,Àcïlóm,Tamïlø,Àhïlöw,Fujïlö,Bödïlö,Sídïló,Søcïló,Ilo,Ilo,Ilof,Lilo,Wilo,Ilowí,Iloge,Bilol,Ilotíj,Tilov,Ilofïr,Ilojog,Wilocu,Tiloli,Jilocè,Liloly,Hilotu,Izilom,Xuwilo,Jíhilo,Ílo,Ílo,Ílo,Ílok,Ílojá,Ílonø,Ílowí,Ílocè,Ílodøm,Dílo,Zílo,Rílo,Pílo,Kílo,Wílor,Sílowù,Tílorí,Líloru,Orílo,Uzílol,Ylílok,Ilö,Ilö,Ilø,Ilö,Iló,Ilö,Iló,Ilö,Ilög,Iløt,Ilós,Ilóq,Ilód,Ilöz,Ilóme,Ilósa,Ilömù,Ilöbàc,Ilögöd,Ilömøj,Ilómaz,Ilórík,Ørílo,Ïtílo,Hoxílo,Viló,Rilö,Cilø,Tilø,Dilö,Siló,Miló,Filø,Kilø,Wilø,Hiló,Giløx,Niløb,Qiløg,Nilóv,Biløs,Giløs,Kiløn,Diløm,Gilöb,Lilós,Kilóc,Lilöj,Hiløp,Kiløhø,Qilötà,Ciløwá,Silóci,Milöto,Qilömó,Silófo,Pilønà,Pápílo,Yjilö,Azilø,Oxilø,Ejilót,Àfilø,Ørilø,Ïdiló,Ïdiló,Èhiløp,Jahiló,Ïbiløh,Áhiløg,Modilø,Ékilöl,Àsiløx,Lèvilö,Sùwilö,Ílö,Íló,Ílø,Ílö,Íló,Íló,Íløk,Ílóx,Íløc,Íløj,Ílöh,Ílöd,Ílöc,Íløt,Ílóv,Ílöz,Ílóp,Ílós,Íløh,Íløq,Íløk,Ílöwï,Ílöxù,Ílörà,Ílóhù,Ílóve,Íløqï,Ílóze,Ílómù,Ílójög,Ílójag,Xíló,Níló,Hílø,Nílø,Gílö,Hílöl,Nílök,Kíløm,Xílöv,Fílök,Xílóf,Lílóh,Vílømø,Bílöwi,Qílöny,Cílöjï,Qíløha,Ohíló,Yníló,Osíló,Oqílö,Uwílón,Öhíló,Ècílø,Ídílø,Ívílø,Èhílø,Èsílö,Ùrílø,Ézíløh,Ídíløk,Àxílød,Ùbílód,Ønílód,Míbílö,Føcílö,Qïnílö,Møjílö,Qírílö,Qókíló,Sámíló,Sítílø
+Generating random list of 100000 strings. Time = 0.049362 sec
+Searching for nonexistent string 'xxéço' in lazy sequence. Time = 0.092299 sec
+Preprocessing items from list of 100000 elements. Time = 0.105708 sec
+Searching for nonexistent string 'xxéço' in preprocessed sequence. Time = 0.055390 sec
+Searching for probable string 'ïlo' in lazy sequence. Time = 0.094692 sec
+Ïlo,Ïlo,Ïlod,Rïlo,Bïlo,Qïlo,Pïlox,Hïlon,Gïlob,Fïlop,Ïloxöf,Xïloko,Lïlohï,Mïlosa,Fïlodø,Ejïloq,Özïlo,Éhïlo,Tyqïlo,Àqïlol,Fójïlo,Ïló,Ïlø,Ïlø,Ïlø,Ïlø,Ïló,Ïló,Ïlö,Ïló,Ïløc,Ïlóq,Ïløm,Ïlöh,Ïløs,Ïlös,Ïløf,Ïlöw,Ïlósí,Ïlóno,Ïlósu,Ïlógó,Ïlósö,Ïlöföt,Ïlótàd,Kïló,Vïlö,Vïló,Pïlö,Rïló,Pïlö,Qïló,Gïlö,Bïlö,Jïlø,Pïlø,Gïlö,Sïlöf,Lïlöf,Tïlóm,Mïlóc,Rïløh,Dïlóv,Rïløt,Xïlømo,Jïlóve,Kïlódè,Dïlökí,Fïlödi,Ycïlø,Azïlø,Ufïlö,Uhïlø,Apïløl,Ïpïlø,Ídïlö,Àrïlø,Ùsïló,Óxïlø,Ánïlö,Ókïlø,Ùwïlö,Ùfïlø,Ötïlö,Girïlö,Íxïløv,Øwïløz,Xicïlø,Íxïlöv,Øzïlól,Ábïløl,Xáwïlö,Fèhïló,Föfïló,Ilo,Ilo,Ilo,Ilo,Ilo,Ilov,Iloc,Nilo,Zilo,Qilo,Iloxï,Filot,Ilokov,Ilopóc,Miloh,Piloq,Viloh,Kilor,Ilofóz,Filoci,Silolé,Émilo,Ehilor,Ópilo,Ébilok,Økilox,Öcilok,Ébilol,Ávilor,Ílo,Ílo,Ílo,Ílo,Íloj,Ílox,Ílolöf,Ílokop,Íloröd,Jílo,Gílo,Cílow,Míloje,Ymílo,Uqílol,Iló,Iló,Ilø,Iló,Iló,Ilø,Ilö,Ilö,Ilø,Ilö,Ilöp,Ilöd,Ilöm,Ilöm,Iløz,Ilötu,Iløwè,Ilöxá,Ilödï,Ilöpo,Iløko,Iløwó,Ilózà,Ilóvo,Ilópø,Ilógö,Iløzi,Ilóryf,Iløjád,Ilófor,Ilövàf,Ilócág,Ilönul,Ilöjur,Ilömök,Iløtók,Ïfílo,Topílo,Ïhílob,Siló,Filó,Nilø,Lilø,Kiló,Jiló,Qiló,Liløv,Viløn,Hilón,Jilós,Filön,Jiløl,Qilóvy,Piløje,Wilócé,Nilórï,Hilöma,Wilórø,Piløré,Xilöpé,Miløgï,Dèlílo,Ucilø,Ogiló,Isilö,Enilö,Imilø,Isiló,Ipilóp,Iriløb,Ililöm,Ùxiló,Zetilö,Geriló,Bujiló,Zawilö,Cisiló,Írilök,Ásilój,Gémilö,Wítiló,Íló,Ílø,Ílø,Íló,Ílö,Ílø,Ílö,Ílö,Ílók,Íløc,Ílöt,Ílöx,Ílóz,Ílóh,Ílög,Ílöc,Ílóg,Ílóg,Ílóvè,Ílówe,Ílóxá,Íløré,Ílóke,Ílöwí,Ílöpóm,Ílólög,Íløkep,Ílövïb,Ílødïj,Ílóhév,Ílózáj,Ílóduw,Jílø,Vílø,Cíló,Pílö,Vílö,Vílóp,Qíløq,Díløs,Bílóf,Qílöq,Sílør,Bílöm,Zílów,Nílówu,Vílögi,Tílöze,Wílólø,Qílømi,Bílösí,Sílörá,Gílöty,Rílópa,Xílócu,Ajílø,Ahíló,Yvílóc,Uqílöx,Utílók,Èpíló,Álílø,Ácílö,Àxílö,Ùfíló,Íxíló,Öpíló,Èsílø,Øtíló,Voxílø,Ùwílól,Ínílóv,Ùbílóm,Óríløz,Ruwíló,Ósílöj,Éfílør,Bèmílø,Nögíló,Lïníló
+Searching for probable string 'ïlo' in preprocessed sequence. Time = 0.053558 sec
+Ïlo,Ïlo,Ïlod,Rïlo,Bïlo,Qïlo,Pïlox,Hïlon,Gïlob,Fïlop,Ïloxöf,Xïloko,Lïlohï,Mïlosa,Fïlodø,Ejïloq,Özïlo,Éhïlo,Tyqïlo,Àqïlol,Fójïlo,Ïló,Ïlø,Ïlø,Ïlø,Ïlø,Ïló,Ïló,Ïlö,Ïló,Ïløc,Ïlóq,Ïløm,Ïlöh,Ïløs,Ïlös,Ïløf,Ïlöw,Ïlósí,Ïlóno,Ïlósu,Ïlógó,Ïlósö,Ïlöföt,Ïlótàd,Kïló,Vïlö,Vïló,Pïlö,Rïló,Pïlö,Qïló,Gïlö,Bïlö,Jïlø,Pïlø,Gïlö,Sïlöf,Lïlöf,Tïlóm,Mïlóc,Rïløh,Dïlóv,Rïløt,Xïlømo,Jïlóve,Kïlódè,Dïlökí,Fïlödi,Ycïlø,Azïlø,Ufïlö,Uhïlø,Apïløl,Ïpïlø,Ídïlö,Àrïlø,Ùsïló,Óxïlø,Ánïlö,Ókïlø,Ùwïlö,Ùfïlø,Ötïlö,Girïlö,Íxïløv,Øwïløz,Xicïlø,Íxïlöv,Øzïlól,Ábïløl,Xáwïlö,Fèhïló,Föfïló,Ilo,Ilo,Ilo,Ilo,Ilo,Ilov,Iloc,Nilo,Zilo,Qilo,Iloxï,Filot,Ilokov,Ilopóc,Miloh,Piloq,Viloh,Kilor,Ilofóz,Filoci,Silolé,Émilo,Ehilor,Ópilo,Ébilok,Økilox,Öcilok,Ébilol,Ávilor,Ílo,Ílo,Ílo,Ílo,Íloj,Ílox,Ílolöf,Ílokop,Íloröd,Jílo,Gílo,Cílow,Míloje,Ymílo,Uqílol,Iló,Iló,Ilø,Iló,Iló,Ilø,Ilö,Ilö,Ilø,Ilö,Ilöp,Ilöd,Ilöm,Ilöm,Iløz,Ilötu,Iløwè,Ilöxá,Ilödï,Ilöpo,Iløko,Iløwó,Ilózà,Ilóvo,Ilópø,Ilógö,Iløzi,Ilóryf,Iløjád,Ilófor,Ilövàf,Ilócág,Ilönul,Ilöjur,Ilömök,Iløtók,Ïfílo,Topílo,Ïhílob,Siló,Filó,Nilø,Lilø,Kiló,Jiló,Qiló,Liløv,Viløn,Hilón,Jilós,Filön,Jiløl,Qilóvy,Piløje,Wilócé,Nilórï,Hilöma,Wilórø,Piløré,Xilöpé,Miløgï,Dèlílo,Ucilø,Ogiló,Isilö,Enilö,Imilø,Isiló,Ipilóp,Iriløb,Ililöm,Ùxiló,Zetilö,Geriló,Bujiló,Zawilö,Cisiló,Írilök,Ásilój,Gémilö,Wítiló,Íló,Ílø,Ílø,Íló,Ílö,Ílø,Ílö,Ílö,Ílók,Íløc,Ílöt,Ílöx,Ílóz,Ílóh,Ílög,Ílöc,Ílóg,Ílóg,Ílóvè,Ílówe,Ílóxá,Íløré,Ílóke,Ílöwí,Ílöpóm,Ílólög,Íløkep,Ílövïb,Ílødïj,Ílóhév,Ílózáj,Ílóduw,Jílø,Vílø,Cíló,Pílö,Vílö,Vílóp,Qíløq,Díløs,Bílóf,Qílöq,Sílør,Bílöm,Zílów,Nílówu,Vílögi,Tílöze,Wílólø,Qílømi,Bílösí,Sílörá,Gílöty,Rílópa,Xílócu,Ajílø,Ahíló,Yvílóc,Uqílöx,Utílók,Èpíló,Álílø,Ácílö,Àxílö,Ùfíló,Íxíló,Öpíló,Èsílø,Øtíló,Voxílø,Ùwílól,Ínílóv,Ùbílóm,Óríløz,Ruwíló,Ósílöj,Éfílør,Bèmílø,Nögíló,Lïníló
 
 Test List OK.
 
-Searching 'hán' from text. Time = 0.000578 sec
+Searching 'hán' from text. Time = 0.000579 sec
 position #307 = Hán
 position #29 = tháng
 position #1161 = tháng
@@ -135,8 +135,8 @@ position #2039 = thành
 
 Test Text OK.
 
-Writing file /tmp/ufind-test-37fb47.txt.
-Searching 'ell' from file /tmp/ufind-test-37fb47.txt. Time = 0.000393 sec
+Writing file /tmp/ufind-test-62f905.txt.
+Searching 'ell' from file /tmp/ufind-test-62f905.txt. Time = 0.000348 sec
 position #319 = elle
 position #750 = elle
 position #1012 = elle
@@ -148,5 +148,4 @@ position #1432 = qu’elle
 position #962 = quoiqu’elle
 
 Test Channel OK.
-
 ```
