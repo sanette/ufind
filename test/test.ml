@@ -73,9 +73,10 @@ let rec random_seq n () =
 (* SIMPLE SEARCH *)
 
 let test_simple () =
-  print_endline "\nSearching for 'giap' :";
+  let name = "giap" in
+  print_endline (Printf.sprintf "\nSearching for '%s' :" name);
   let items = items_from_names sample in
-  let giap = select_data items "giap" in
+  let giap = select_data items name in
   List.iter print_endline giap;
   assert (giap = ["Giáp Đông Nghị"]);
 

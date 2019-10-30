@@ -5,7 +5,7 @@
 
 (* Vu Ngoc San, 2019 *)
 
-(* This module depends on Ufind_Subset *)
+(* This module depends on Ufind_subset *)
 
 module Subset = Ufind_subset
 module Int = struct type t = int let compare : int -> int -> int = compare end
@@ -226,19 +226,22 @@ let from_utf8_string_with_subs ?strip s : string * substitution =
   let b = Buffer.create (String.length s) in
   let subs = ref [] in
   let malformed = "?" in
+  let strip = match strip with
+    | None -> fun _ -> Uutf.Buffer.add_utf_8 b
+    | Some strip -> fun pos _ ->
+      Buffer.add_string b strip;
+      subs := (pos, (Strip, strip)) :: !subs in
   let folder () pos = function
     | `Malformed _ ->
       Buffer.add_string b malformed;
       subs := (pos, (Malformed, malformed)) :: !subs
-    | `Uchar u -> match Ubase.uchar_to_string u with
-      | t -> Buffer.add_string b t;
-        if Uchar.to_int u > 127
-        then subs := (pos, (Uchar, t)) :: !subs
-      | exception Not_found -> match strip with
-        | None -> Uutf.Buffer.add_utf_8 b u
-        | Some strip ->
-          Buffer.add_string b strip;
-          subs := (pos, (Strip, strip)) :: !subs
+    | `Uchar u ->
+      if Uchar.to_int u <= 127
+      then Uutf.Buffer.add_utf_8 b u
+      else match Ubase.uchar_replacement u with
+        | Some t -> Buffer.add_string b t;
+          subs := (pos, (Uchar, t)) :: !subs
+        | None -> strip pos u
   in
   Uutf.String.fold_utf_8 folder () s;
   Buffer.to_bytes b, !subs;;
@@ -660,11 +663,11 @@ let defect_fn = function
 
 (* The first distance is the minimum number of substitutions on item1 and item2
    (we take the sum) required to make them "equal".  It is more efficient if
-   item1 has fewer accents than item2. It also returns a pair of matching
+   item1 has fewer accents than item2 (why?). It also returns a pair of matching
    substitutions, and degree of defect of the test (0=perfect match). If [dtest]
    is not the default '=', the 'distance' can be no longer symmetric (as with
    test_substring.) *)
-let distance ?(dtest = test_equal) item1 item2 =
+let distance ~dtest item1 item2 =
   match dtest (item1.utf8, item1.base) (item2.utf8, item2.base) with
   | Some defect -> 0, Some ([], [], defect)
   | None ->
@@ -673,6 +676,12 @@ let distance ?(dtest = test_equal) item1 item2 =
        cannot be a simpler match at a later step. *)
     (* Remark: instead of two loops, we could fold over the cartesian product
        (assuming we construct a cartesian product iterator). *)
+
+    (* For each substitution [name1] of item1, [loop2] iterates over the
+       substitutions of item2. We return (d2, subs, defect) where d2 is the
+       smallest found number of substitutions of item2 required to match name1.
+       If d2 is larger than dist, we disregard it and return the initial triple
+       (dist, subs = None, defect).  *)
     let rec loop2 name1 seq2 (dist, subs, defect) =
       match seq2 () with
       | Seq.Nil -> dist, subs, defect
@@ -685,8 +694,16 @@ let distance ?(dtest = test_equal) item1 item2 =
           else let name2 = apply_subs subs2 item2.utf8 in
             match dtest (name1, item1.base) (name2, item2.base) with
             | Some defect -> d2, Some subs2, defect
-            | None -> dist, subs, defect in
+            | None -> dist, subs, defect
+        in
         loop2 name1 next result in
+
+    (* Iterate over the substitutions of item1. Returns (dist,pair) where dist
+       is the smallest found total distance between some substitution of item1
+       and some substitution of item2.  The pair is actually a triple option, it
+       is None if the distance is not defined (infinite); otherwise it contains
+       these substitutions and also the defect.  The distance is simply the sum
+       of lengths of both substitutions. *)
     let rec loop1 seq1 dist subs_pair =
       match seq1 () with
       | Seq.Nil -> dist, subs_pair
@@ -703,7 +720,9 @@ let distance ?(dtest = test_equal) item1 item2 =
             | Some subs2 -> Some (subs1, subs2, defect) in
         loop1 next dist subs_pair in
     let seq1 = Subset.to_seq item1.subs in
-    loop1 seq1 (String.length item1.utf8) None
+    let infinite = String.length item1.utf8 + String.length item2.utf8 + 1 in
+    (* the infinite distance can never occur. *)
+    loop1 seq1 infinite None
 
 
 (* Searching *)
@@ -734,7 +753,7 @@ module Matching = struct
     Seq.map (fun it ->
         let d, subs_pair = distance ~dtest item it in
         match subs_pair with
-        | None -> failwith "Probaly a wrong casefolding function."
+        | None -> failwith "Probably a wrong casefolding function."
         (* Not found, this should not happen since the bases are the same. *)
         | Some pair -> (d, it, pair)
       ) reduce;;
@@ -780,6 +799,3 @@ let select_data ?(folding = default_casefolding) ?stop ?matching_stop
 let isolatin_to_utf8 = Ubase.isolatin_to_utf8
 
 let utf8_to_ascii = Ubase.from_utf8_string ~malformed:"?" ~strip:""
-
-
-
