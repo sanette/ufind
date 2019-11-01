@@ -770,9 +770,6 @@ module Matching = struct
 end
 
 
-(* TODO select_list *)
-
-
 (* Search the string [name] within the sequence of search items [seq] and
    returns the sorted list of data corresponding to matching items.  If [stop]
    is not provided, the search will explore the whole sequence. Otherwise, the
@@ -794,8 +791,13 @@ let select_data ?(folding = default_casefolding) ?stop ?matching_stop
   Matching.to_list matching
   |> List.map Matching.data
 
-
-
+(* Filter (and sort by relevance) the given list by returning only elements whose
+   name field (extracted by get_name) matches [name]. *)
+let filter_list ?(folding = default_casefolding)
+    ?(matching_defect : matching_defect = MD_SUBSTRING) ~get_name name list =
+  list_to_seq list
+  |> items_from_seq ~folding ~get_name ~get_data:(fun x -> x)
+  |> fun seq -> select_data ~folding ~matching_defect seq name
 
 (* String conversion utilities from Ubase *)
 

@@ -9,7 +9,7 @@ Accents and more general diacritics are recognized for all Latin
  characters.  For other alphabets, searching will remain accent
  sensitive.
 
-__Ufind__ will give you a list of matching strings, and this this is a
+__Ufind__ will give you a list of matching strings, and this is a
 _ranking_: exact matches will be ranked first, and then substrings
 and/or strings obtained by modifying the accents will have a lower
 ranking.
@@ -56,6 +56,11 @@ Giáp Đông Nghị
 The string "Olivia Apodaca" came first, because the substring "ap" is
 present without any accent substitution. If we searched "áp" instead,
 the order of the results would have been inverted.
+
+_In fact, for a simple list like this, there is an even simpler way of
+doing this, see [filter_list](docs/index.html#val-filter_list), but
+the example above will scale immediately to large databases and more
+complex searches_
 
 See also the `test` directory for more examples.
 

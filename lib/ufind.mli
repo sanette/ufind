@@ -13,10 +13,24 @@
 
 @version 0.01 *)
 
-(** {1 Example} 
-    
-    For searching a substring in a list of strings, you only need two
-    lines of code.  Here we use the [sample] list of names that can be
+(** {1 Examples} 
+
+    The simplest search function is {!filter_list}; you can use it for 
+    searching an arbitrary list with only one line of code:
+
+{[ # let list = [1,"Arthur"; 2,"Benoît"; 3,"Camille"; 4,"Damián"] in
+   Ufind.filter_list ~get_name:snd "á" list;;
+
+ - : (int * string) list = [(4, "Dami\195\161n"); (1, "Arthur"); (3, "Camille")] ]}
+    Note that the results are sorted by relevance; 
+    the best match is "Damián" because it has an "á" with the correct accent.
+
+    However, for better speed {e and} memory usage, as soon as you intend 
+    to do several searches in the same database, we recommend using a 
+    two-step approach, as in the example below.
+
+    Let us search a substring in a list of strings.
+    Here we use the [sample] list of names that can be
     found in the test directory.
 
 First we prepare the data:
@@ -335,6 +349,23 @@ val make_stop : ?count:int -> ?timeout:float -> unit ->
 
   *)
 
+val filter_list : ?folding:casefolding ->
+?matching_defect:matching_defect ->
+  get_name:('a -> string) -> string -> 'a list -> 'a list
+(** This is the simplest search function; it doesn't require any
+   preprocessing. [filter_list ~get_name name list] will filter (and sort by
+   relevance) the given [list] by returning only those elements whose name field
+   (extracted by [get_name]) matches [name].
+
+Example: {[ # let list = [1,"Arthur"; 2,"Benoît"; 3,"Camille"; 4,"Damián"] in
+   filter_list ~get_name:snd "á" list;;
+
+ - : (int * string) list = [(4, "Dami\195\161n"); (1, "Arthur"); (3, "Camille")]
+   ]}
+
+    Because the returned list is just a subset of the initial list, one can
+    easily refine a search by chaining several calls to [filter_list].  *)
+
 (** Obtaining detailed matching results
 
     Use this module if {!select_data} is not sufficient for your needs.
@@ -345,26 +376,26 @@ For instance, in order to obtain a global ranking of results obtained from
  *)
 module Matching : sig
   type 'a item
-       (** Matching item. *)
+  (** Matching item. *)
 
   val data : 'a item -> 'a
   (** Extract the data from the matching item. *)
-    
+
   val find : ?folding:casefolding -> matching_defect:matching_defect ->
     'a search_item Seq.t -> string -> 'a item Seq.t
   (** [find sitems name] immediately returns the lazy sequence of {!item}s
-     matching the given [name] in the sequence of search items [sitems]. The
-     returned sequence may be infinite if [sitems] is infinite.
+      matching the given [name] in the sequence of search items [sitems]. The
+      returned sequence may be infinite if [sitems] is infinite.
 
       The [matching_defect] parameter defines the function used for matching:
-     its first entry is (given by) the provided [name].
+      its first entry is (given by) the provided [name].
 
       Warning: the [folding] parameter must be the same as the one used to
-     create the [sitems] sequence. *)
+      create the [sitems] sequence. *)
 
   val to_list : 'a item Seq.t -> 'a item list
   (** Convert the result of [find] to a sorted list. *)
-      
+
 end
 
 (** {1 Utilities} *)
