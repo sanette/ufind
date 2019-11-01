@@ -58,9 +58,10 @@ present without any accent substitution. If we searched "áp" instead,
 the order of the results would have been inverted.
 
 _In fact, for a simple list like this, there is an even simpler way of
-doing this, see [filter_list](docs/index.html#val-filter_list), but
-the example above will scale immediately to large databases and more
-complex searches_
+doing this, see
+[filter_list](https://sanette.github.io/ufind/index.html#val-filter_list),
+but the example above will scale immediately to large databases and
+more complex searches._
 
 See also the `test` directory for more examples.
 
