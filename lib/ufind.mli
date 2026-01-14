@@ -13,20 +13,20 @@
 
 @version 0.01 *)
 
-(** {1 Examples} 
+(** {1 Examples}
 
-    The simplest search function is {!filter_list}; you can use it for 
+    The simplest search function is {!filter_list}; you can use it for
     searching an arbitrary list with only one line of code:
 
 {[ # let list = [1,"Arthur"; 2,"Benoît"; 3,"Camille"; 4,"Damián"] in
    Ufind.filter_list ~get_name:snd "á" list;;
 
  - : (int * string) list = [(4, "Dami\195\161n"); (1, "Arthur"); (3, "Camille")] ]}
-    Note that the results are sorted by relevance; 
+    Note that the results are sorted by relevance;
     the best match is "Damián" because it has an "á" with the correct accent.
 
-    However, for better speed {e and} memory usage, as soon as you intend 
-    to do several searches in the same database, we recommend using a 
+    However, for better speed {e and} memory usage, as soon as you intend
+    to do several searches in the same database, we recommend using a
     two-step approach, as in the example below.
 
     Let us search a substring in a list of strings.
@@ -47,7 +47,7 @@ val result : string list =
 # List.iter print_endline result;;
 Olivia Apodaca
 Giáp Đông Nghị
-- : unit = ()                 
+- : unit = ()
 ]}
 
 The string "Olivia Apodaca" came first, because the substring "ap" is
@@ -152,17 +152,17 @@ type matching_defect =
 
       [f s1 s2] returns [Some 0] if [s1 = s2].
 
-   A good matching_defect function should primarily compare the "name" components 
-   of [s1] and [s2]; it does not need to take into account their "base" components. 
+   A good matching_defect function should primarily compare the "name" components
+   of [s1] and [s2]; it does not need to take into account their "base" components.
    However, it must be consistent in the following way:
 
-      If [f (name1, base1) (name2, base2) <> None] then we must have 
+      If [f (name1, base1) (name2, base2) <> None] then we must have
       [f (base1, "") (base2, "") <> None] as well.
 
    {e In future versions, we plan to implement functions that accept small
    typing errors, like permutations of two consecutive letters. But right now,
    you need to write your own function for this feature.}  *)
-  
+
 (** {1 Searching}
 
 The Ufind library is meant for searching through a database by filtering a
@@ -235,7 +235,7 @@ val preprocess_file : ?limit:int * int ->
    line.
 
 The name field should be obtained by [get_name line], and the data field by
-   [get_data line]. Returns the sequence of pre-processed search items.  *) 
+   [get_data line]. Returns the sequence of pre-processed search items.  *)
 
 (** The [items_from*] functions below, contrary to the [preprocess*] functions,
    immediately return a lazy sequence of [search_item]s that will be evaluated
@@ -273,7 +273,7 @@ val items_from_names : ?folding:casefolding ->
 
 val items_from_text : ?folding:casefolding -> string -> (int * string) search_item Seq.t
 (** [items_from_text text] immediately constructs a lazy list of search_item
-   corresponding to each word of the string [text], where word delimiters are 
+   corresponding to each word of the string [text], where word delimiters are
     [[ \t\n()]]. Usual punctuation signs are removed from the end of words.
 
     The returned sequence is not mutable, and will always point to the start of
@@ -297,7 +297,7 @@ val items_from_channel : ?folding:casefolding -> in_channel -> (int * string) se
    starting from the initial state of the channel.
 
 *)
-    
+
 (** {2 Search results}
 
 *)
@@ -336,14 +336,14 @@ val make_stop : ?count:int -> ?timeout:float -> unit ->
 
     In conjunction with {!seq_split}, the [flag] can be used to resume a
     previously stopped search, as follows.
-    
+
     {[let seq1, seq2 = seq_split items in
       let stop, flag = make_stop ~count:10 () in
       let result = select_data ~stop seq1 name in
     if flag () then begin
       print_endline "The search was interrupted. We resume it.";
       let result2 = select_data seq2 name in
-      (* ...now the complete result is the union {result,result2}, 
+      (* ...now the complete result is the union {result,result2},
             but the global ranking is lost... *)
     end else print_endline "The search was complete."]}
 
@@ -419,7 +419,7 @@ val seq_to_list_rev : 'a Seq.t -> 'a list
 
 val list_to_seq : 'a list -> 'a Seq.t
 (** Immediately return a lazy sequence from the given list. *)
-    
+
 val seq_eval : 'a Seq.t -> 'a Seq.t
 (** Evaluate the whole sequence and return a new sequence with the evaluated
    values. *)
@@ -446,12 +446,12 @@ val seq_split : 'a Seq.t -> 'a Seq.t * 'a Seq.t
     For instance if we let [st = seq_truncate 0 10 s1] and iterate on [st], then
    the iteration of [s2] will start at the 11th element of [seq].  *)
 
-(** {2 String conversions} 
+(** {2 String conversions}
 
 Shortcuts to some {{:https://sanette.github.io/ubase/}Ubase} functions.
 *)
 
-val isolatin_to_utf8 : string -> string
+val isolatin_to_utf8 : ?control:int -> string -> string
 (** Convert ISO_8859_1 to UTF8 *)
 
 val utf8_to_ascii : string -> string
@@ -464,7 +464,7 @@ val utf8_to_ascii : string -> string
 - : string = "Deja vu!"
 ]} *)
 
-(** {2 Mysql interface} 
+(** {2 Mysql interface}
 
 See {{:https://github.com/sanette/ufind/blob/master/ufind_mysql.md}an example here}.
 
