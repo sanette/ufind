@@ -1,12 +1,12 @@
 (* Dealing with subsets of a list *)
 
-(* This file is part of Ubase. But it's an independent module, *)
-(* it only depends on Graycode (included in Ubase). *)
+(* This file is part of Ufind. But it's an independent module, *)
+(* it only depends on Graycode (included in Ufind). *)
 
 (* San Vu Ngoc, 2019 *)
 
 module Graycode = Ufind_graycode
-  
+
 (* array est le tableau contenant tous les éléments potentiels, et code "encode"
    les éléments selectionnés dans le subset, en binaire (1 en position i => le
    array.(i) est présent dans le subset.) *)
@@ -14,7 +14,7 @@ type 'a t = { array : 'a array; code : Graycode.t }
 
 (* Retourne l'ensemble vide comme sous-ensemble de list *)
 let empty list = { array = Array.of_list list; code = Graycode.zero }
-                 
+
 (* Retourne l'ensemble défini par list au complet. *)
 let full list =
   let array = Array.of_list list in
@@ -58,7 +58,7 @@ let succ_inplace full_array opt_array code  =
     then opt_array.(b) <- Some full_array.(b)
     else opt_array.(b) <- None in
   code
-    
+
 (* Note that f is always executed at least once, because the empty set belongs
    the the power set. *)
 let iter_powerset f list =
@@ -80,7 +80,7 @@ let fold_powerset f x0 list =
   let last_code = Graycode.last (Array.length subset.array) in
   let rec loop x code =
     if Graycode.equal code last_code
-    then f x opt_array 
+    then f x opt_array
     else loop (f x opt_array) (succ_inplace subset.array opt_array code)
   in
   loop x0 subset.code
@@ -114,7 +114,7 @@ let iter f list =
 let fold f x list =
   let g y a = f y (opt_array_to_list a) in
   fold_powerset g x list
-    
+
 (* let print_opt_array array =
  *   array
  *   |> Array.to_list
@@ -143,5 +143,5 @@ let fold f x list =
 [1,4]
 [4]
 - : unit = ()
-# 
+#
 *)

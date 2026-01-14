@@ -88,7 +88,7 @@ type casefolding =
    your database. The expected properties of the casefolding function are:
 
     - Removing accents (with {!utf8_to_ascii}) followed by casefolding should
-   give the same result as casefolding followed be removing accents. The
+   give the same result as casefolding followed by removing accents. The
    resulting string is called the base string. It contains only ASCII
    characters.
 
@@ -451,7 +451,7 @@ val seq_split : 'a Seq.t -> 'a Seq.t * 'a Seq.t
 Shortcuts to some {{:https://sanette.github.io/ubase/}Ubase} functions.
 *)
 
-val isolatin_to_utf8 : ?control:int -> string -> string
+val isolatin_to_utf8 : string -> string
 (** Convert ISO_8859_1 to UTF8 *)
 
 val utf8_to_ascii : string -> string

@@ -1,8 +1,8 @@
 (lang dune 1.11)
 (name ufind)
-(version "0.01")
+(version "0.02")
 (generate_opam_files true)
-(license GPL2)
+(license GPL-3.0-or-later)
 (maintainers "Vu Ngoc San <san.vu-ngoc@laposte.net>")
 (authors "Vu Ngoc San <san.vu-ngoc@laposte.net>")
 (source (github sanette/ufind))
@@ -13,7 +13,8 @@
  (tags ("utf8"))
  (depends
   (zarith (>= 1.9.1))
-  (dune (>= 1.10))
+  (dune :build)
+   uutf
   (uunf (>= 12.0.0))
   (uucp (>= 12.0.0))
   (ubase (>= 0.01))))

@@ -32,7 +32,7 @@ second step_. In this document we only focus on this second step.
 
 For this example, we use the freely available 'world' database
 
-https://downloads.mysql.com/docs/world.sql.gz
+https://downloads.mysql.com/docs/world-db.tar.gz
 
 Once you have downloaded it, connect to Mysql and insert the file as follows:
 
@@ -92,7 +92,7 @@ open Mysql;;
 let default o x = match o with
   | None -> x
   | Some y -> y
-    
+
 let world_items db =
   let res = exec db "SELECT * FROM city" in
   let () = match status db with
@@ -101,8 +101,7 @@ let world_items db =
                      (default (errmsg db) "?"))
     | StatusOK
     | StatusEmpty -> () in
-  let get_name row = (default (column ~key:"Name" ~row res)) "Unknown"
-                     |> Ufind.isolatin_to_utf8 in
+  let get_name row = (default (column ~key:"Name" ~row res)) "Unknown" in
   let get_code row = default (column ~key:"CountryCode" ~row res) "???" in
   let get_data row = sprintf "City: %s, Country code: [%s]"
       (get_name row) (get_code row) in
@@ -110,7 +109,7 @@ let world_items db =
     | None -> Seq.empty
     | Some row -> fun () -> Seq.Cons (row, seq ()) in
   Ufind.items_from_seq ~get_name ~get_data (seq ());;
-  
+
 let world () =
   quick_connect ~database:"world" ~user:"......." ~password:"......."  ()
 ```

@@ -2,13 +2,13 @@
 
 (* https://fr.wikipedia.org/wiki/Code_de_Gray *)
 
-(* This file is part of Ubase. But it's an independent module, *)
+(* This file is part of Ufind. But it's an independent module, *)
 (* it only depends on Zarith. *)
 
 (* San Vu Ngoc, 2019 *)
 
 type t = {
-  indicator : Z.t; 
+  indicator : Z.t;
   length : int; (* number of "ones" *)
   last : int (* position du 1 le plus à droite, en numéro de bit (0=le plus à
                 droite) *)
@@ -21,7 +21,7 @@ let toggle_bit b int =
   Z.logxor int x
 
 let has_bit b int =
-  Z.testbit int b 
+  Z.testbit int b
 
 let is_even = Z.is_even
 
@@ -30,7 +30,7 @@ let last_one int =
   else Z.trailing_zeros int
 
 let length = Z.popcount
-           
+
 let to_Z gray =
   gray.indicator
 
@@ -44,7 +44,7 @@ let of_Z z =
 let of_int int =
   if int < 0 then failwith "Subset Indicator must be non-negative."
   else of_Z (Z.of_int int)
-      
+
 let succ_mod gray =
   if gray.length mod 2 = 0
   then

@@ -332,7 +332,7 @@ let seq_split seq =
 
 
 
-(* In order to test sequences and side-effects, it is useful to consider a sequence like this:
+(* Test sequences and side-effects:
 
 let seq = list_to_seq ["1";"2";"3";"4";"5"];;
 let seq_test = Seq.map (fun s -> print_endline ("Reading: " ^s); s) seq;;
@@ -663,10 +663,10 @@ let defect_fn = function
 
 (* The first distance is the minimum number of substitutions on item1 and item2
    (we take the sum) required to make them "equal".  It is more efficient if
-   item1 has fewer accents than item2 (why?). It also returns a pair of matching
-   substitutions, and degree of defect of the test (0=perfect match). If [dtest]
-   is not the default '=', the 'distance' can be no longer symmetric (as with
-   test_substring.) *)
+   item1 has fewer accents than item2 (true?). It also returns a pair of
+   matching substitutions, and degree of defect of the test (0=perfect
+   match). If [dtest] is not the default '=', the 'distance' can be no longer
+   symmetric (as with test_substring.) *)
 let distance ~dtest item1 item2 =
   match dtest (item1.utf8, item1.base) (item2.utf8, item2.base) with
   | Some defect -> 0, Some ([], [], defect)
@@ -799,8 +799,11 @@ let filter_list ?(folding = default_casefolding)
   |> items_from_seq ~folding ~get_name ~get_data:(fun x -> x)
   |> fun seq -> select_data ~folding ~matching_defect seq name
 
+(* TODO: base_filter et base_filter_list qui ne font pas de classement -> plus
+   rapide ? *)
+
 (* String conversion utilities from Ubase *)
 
-let isolatin_to_utf8 = Ubase.isolatin_to_utf8
+let isolatin_to_utf8 s = Ubase.isolatin_to_utf8 s
 
-let utf8_to_ascii = Ubase.from_utf8_string ~malformed:"?" ~strip:""
+let utf8_to_ascii = Ubase.from_utf8 ~malformed:"?" ~strip:""
