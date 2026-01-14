@@ -73,9 +73,9 @@ The search can be greatly modified by playing with two filters: {e casefolding}
     This function is applied only in the preprocess stage, see below.  *)
 
 type casefolding =
-  | CF_D144 (** {{:http://unicode.org/versions/latest/ch03.pdf}Unicode Core Spec}, page 157. *)
-  | CF_D145 (** {{:http://unicode.org/versions/latest/ch03.pdf}Unicode Core Spec}, page 158. *)
-  | CF_D147 (** {{:http://unicode.org/versions/latest/ch03.pdf}Unicode Core Spec}, page 158. *)
+  | CF_D144 (** {{:https://unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G53513}Unicode Core Spec}. *)
+  | CF_D145 (** {{:https://unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G53523}Unicode Core Spec}. *)
+  | CF_D147 (** {{:https://unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/#G53539}Unicode Core Spec}. *)
   | CF_NONE (** no transformation *)
   | CF_LATIN145 (** D145 restricted to Latin letters *)
   | CF_LATIN147 (** D147 restricted to Latin letters *)
