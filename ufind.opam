@@ -34,5 +34,4 @@ build: [
   ]
 ]
 dev-repo: "git+https://github.com/sanette/ufind.git"
-conflicts: [ "ocaml" { = "4.14-flambda" } ]
 x-maintenance-intent: ["(latest)"]
