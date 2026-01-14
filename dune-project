@@ -1,4 +1,4 @@
-(lang dune 1.11)
+(lang dune 2.7)
 (name ufind)
 (version "0.02")
 (generate_opam_files true)
@@ -13,7 +13,6 @@
  (tags ("utf8"))
  (depends
   (zarith (>= 1.9.1))
-  (dune :build)
    uutf
   (uunf (>= 12.0.0))
   (uucp (>= 12.0.0))

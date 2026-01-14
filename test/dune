@@ -1,14 +1,5 @@
-(executable
+(test
  (name test)
- (libraries unix ufind))
-
-(alias
- (name buildtest)
- (deps test.exe))	
-
-(alias
- (name runtest)	
- (action	
-  (run %{exe:test.exe})
-  ))	
-  
+ (modules test)
+ (libraries unix ufind)
+ (modes exe))
