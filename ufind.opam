@@ -6,19 +6,21 @@ synopsis:
 maintainer: ["Vu Ngoc San <san.vu-ngoc@laposte.net>"]
 authors: ["Vu Ngoc San <san.vu-ngoc@laposte.net>"]
 license: "GPL-3.0-or-later"
+tags: ["utf8"]
 homepage: "https://github.com/sanette/ufind"
 bug-reports: "https://github.com/sanette/ufind/issues"
 depends: [
+  "dune" {>= "2.7"}
   "zarith" {>= "1.9.1"}
-  "dune" {build}
   "uutf"
   "uunf" {>= "12.0.0"}
   "uucp" {>= "12.0.0"}
   "ubase" {>= "0.01"}
   "ocaml" {>= "4.14.0"}
+  "odoc" {with-doc}
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   [
     "dune"
     "build"
