@@ -18,7 +18,7 @@ let option_map f = function
 
 (* Casefolding *)
 (***************)
-    
+
 type casefolding =
   | CF_D144 (* http://unicode.org/versions/latest/ch03.pdf page 157. *)
   | CF_D145 (* http://unicode.org/versions/latest/ch03.pdf page 158. *)
@@ -66,7 +66,7 @@ type casefolding =
 let default_casefolding : casefolding = CF_D144;;
 
 let iadd map (k, (v : string )) = Imap.add k v map
-        
+
 let cf_latin145_map =
   List.fold_left iadd Imap.empty Ufind_data.cf_d145_alist
 
@@ -214,7 +214,7 @@ let casefolding_pair folding = match folding with
 
 type replacement =
   | Malformed
-  | Uchar 
+  | Uchar
   | Strip
 
 (* A substitution is a map (a association list) that with an integer (the
@@ -244,7 +244,7 @@ let from_utf8_string_with_subs ?strip s : string * substitution =
         | None -> strip pos u
   in
   Uutf.String.fold_utf_8 folder () s;
-  Buffer.to_bytes b, !subs;;
+  Buffer.contents b, !subs;;
 
 (* apply the substitution [subs] to the utf string [s]. *)
 let apply_subs subs s =
@@ -257,7 +257,7 @@ let apply_subs subs s =
       | `Uchar u -> Uutf.Buffer.add_utf_8 b u
   in
   Uutf.String.fold_utf_8 folder () s;
-  Buffer.to_bytes b;;
+  Buffer.contents b;;
 
 (* Utilities for sequences *)
 (***************************)
@@ -284,7 +284,7 @@ let seq_eval seq =
   seq_to_list_rev seq
   |> List.rev
   |> list_to_seq
-  
+
 (* Returns the sequence starting at the nth element (starting from n=0), or the
    empty sequence if the sequence is not long enough. NOT lazy: the elements
    before the nth element are immediately evaluated. *)
@@ -293,7 +293,7 @@ let rec seq_skip n seq =
   else match seq () with
     | Seq.Nil -> Seq.empty
     | Seq.Cons (_, next) -> seq_skip (n-1) next  (* tailrec *)
-                              
+
 (* (Half)-immediate truncation of a sequence (not lazy: element before #start
    will be evaluated. But no other element.) The number of items in the returned
    sequence can be less than length in case the initial sequence is too
@@ -347,7 +347,7 @@ Reading: 2
 Reading: 3
 3
 - : unit = ()
-# 
+#
 
    We now chek the funny behaviour of seq_split:
 
@@ -425,7 +425,7 @@ Reading: 4
 Reading: 5
 5
 - : unit = ()
-# 
+#
 *)
 
 
@@ -442,7 +442,7 @@ type 'a search_item =
 let base_of_item item = item.base
 
 let data_of_item item = item.data
-                      
+
 let make_item ~folding ~get_name ~get_data x =
   let name = get_name x in
   let data = get_data x in
@@ -456,7 +456,7 @@ let make_item ~folding ~get_name ~get_data x =
 (* Create a lonely item from a string, with no associated data *)
 let item_from_name ~folding name =
    let get_name s = s in
-   let get_data _ = () in   
+   let get_data _ = () in
    make_item ~folding ~get_name ~get_data name
 
 (* If [limit=(offset,count)], [preprocess] will force evaluation of the first
@@ -475,7 +475,7 @@ let rec preprocess ?(folding = default_casefolding) ?limit
     |> list_to_seq
   | Some (offset, count) ->
     seq_truncate offset count seq
-    |> preprocess ~folding ~get_name ~get_data 
+    |> preprocess ~folding ~get_name ~get_data
 
 (* Use [preprocess] or [preprocess_list] to accelerate several searches in the
    same database. *)
@@ -487,9 +487,9 @@ let preprocess_list ?(folding = default_casefolding) ~get_name ~get_data list =
 
 (* Create a lazy item sequence from any type of sequence. See [preprocess]. *)
 let items_from_seq ?(folding = default_casefolding) ~get_name ~get_data seq =
-  let folding = casefolding_pair folding in  
+  let folding = casefolding_pair folding in
   Seq.map (make_item ~folding ~get_name ~get_data) seq
-  
+
 (* [items_from_names list] returns a lazy sequence of search items from a list
    of strings. For faster searching, rather use [preprocess_list id_string
    id_string list], where [id_string x = x]. The only interest of
@@ -530,7 +530,7 @@ let preprocess_file ?limit ~get_name ~get_data file =
 let punctuation = [','; '.'; ';'; ':'; '?'; '!']
 
 (* TODO use all Unicode white space (see Ubase.is_space) and punctuation. *)
-                  
+
 (* Lazy sequence of all "words" separated by [ \t\n()] AND trimmed of their
    trailing punctuation. "words" here are pairs (pos,len). *)
 let split_string s =
@@ -550,7 +550,7 @@ let split_string s =
            then punct + 1 else if len = 0 then punct else 0 in
       (loop [@tailcall]) (i+1) (len+1) punct () in
   loop 0 0 0
-    
+
 (* Lazy sequence of search items from the words in a string. *)
 let items_from_text ?(folding = default_casefolding) s =
   let folding = casefolding_pair folding in
@@ -569,7 +569,7 @@ let split_channel ch =
     else let c, eof = try input_char ch, false
            with End_of_file -> '\n', true in
       if c = ' ' || c = '\t' || c = '\n' || c = '(' || c = ')'
-      then if Buffer.length word <> 0 (* length of word *) 
+      then if Buffer.length word <> 0 (* length of word *)
         then begin (* we deliver the word *)
           let s = Buffer.contents word in
           let pos = i - Buffer.length word - Buffer.length punct in
@@ -582,7 +582,7 @@ let split_channel ch =
           Buffer.clear punct;
           (loop [@tailcall]) (i+1) eof ()
         end
-      else 
+      else
       if List.mem c punctuation then begin
         Buffer.add_char punct c;
         (loop [@tailcall]) (i+1) eof ()
@@ -603,7 +603,7 @@ let items_from_channel ?(folding = default_casefolding) ch =
   let get_data (i,s) = (i,s) in
   split_channel ch
   |> Seq.map (make_item ~folding ~get_name ~get_data)
-    
+
 (* Generating a stop function, and a flag function indicating if the stop was
    triggered. *)
 let make_stop ?count ?timeout () =
@@ -709,7 +709,7 @@ let distance ~dtest item1 item2 =
       | Seq.Nil -> dist, subs_pair
       (* dist = total distance (sum) between seq1 and seq2 *)
       | Seq.Cons (subs1, next) ->
-        let dist, subs_pair = 
+        let dist, subs_pair =
           let d1 = List.length subs1 in
           if d1 >= dist then dist, subs_pair
           else let name1 =  apply_subs subs1 item1.utf8 in
@@ -736,7 +736,7 @@ module Matching = struct
 
   let data (_,it,_) = it.data
   (** Extract the data from the matching item. *)
-                        
+
   (* Returns the lazy sequence of matching items using the [dtest] comparison
    whose first entry is (given by) the provided [name]. Can be infinite.  The
    [folding] parameter must be the same as the one used to create the
@@ -766,7 +766,7 @@ module Matching = struct
         match compare dis1 dis2 with
         | 0 -> compare def1 def2
         | d -> d)
-      
+
 end
 
 

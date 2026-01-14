@@ -1,4 +1,4 @@
 (library
  (name ufind)
  (public_name ufind)
- (libraries unix seq str uunf uucp ubase zarith))
+ (libraries unix seq str uunf uucp uutf ubase zarith))
