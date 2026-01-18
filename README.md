@@ -1,9 +1,10 @@
-# Case insensitive, accent insensitive search engine
+# Utf8 search engine with parameterized case and accent sensibility
 
-__Ufind__ is a small [ocaml](https://ocaml.org/) library that
-provides a case insentitive, accent insensitive search in strings
-encoded in utf8. It is meant to be easy to use, either for searching
-simple lists, or for digging in large databases.
+__Ufind__ is a small [ocaml](https://ocaml.org/) library that provides
+a search engine for strings encoded in utf8, which can be parametrized
+to be accent insensitive, case insentitive, or only partially. It is
+meant to be easy to use, either for searching simple lists, or for
+digging in large databases.
 
 Accents and more general diacritics are recognized for all Latin
  characters.  For other alphabets, searching will remain accent
@@ -50,7 +51,7 @@ val result : string list =
 # List.iter print_endline result;;
 Olivia Apodaca
 Giáp Đông Nghị
-- : unit = ()                 
+- : unit = ()
 ```
 
 The string "Olivia Apodaca" came first, because the substring "ap" is

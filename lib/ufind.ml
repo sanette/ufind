@@ -3,13 +3,11 @@
 (* This module provides a case insentitive, accent insensitive search in lists
    of strings encoded in utf8. *)
 
-(* Vu Ngoc San, 2019 *)
+(* Vu Ngoc San, 2019-2026 *)
 
 (* This module depends on Ufind_subset *)
 
 module Subset = Ufind_subset
-module Int = struct type t = int let compare : int -> int -> int = compare end
-module Imap = Map.Make(Int)
 
 let option_map f = function
   | Some x -> Some (f x)
@@ -65,13 +63,18 @@ type casefolding =
 
 let default_casefolding : casefolding = CF_D144;;
 
-let iadd map (k, (v : string )) = Imap.add k v map
+let iadd tbl (k, (v : string )) = Hashtbl.add tbl k v
+(* Using Hashtbl is not noticeably faster than Map *)
 
 let cf_latin145_map =
-  List.fold_left iadd Imap.empty Ufind_data.cf_d145_alist
+  let tbl = Hashtbl.create 778 in
+  List.iter (iadd tbl) Ufind_data.cf_d145_alist;
+  tbl
 
 let cf_latin147_map =
-  List.fold_left iadd Imap.empty Ufind_data.cf_d147_alist
+   let tbl = Hashtbl.create 1111 in
+  List.iter (iadd tbl) Ufind_data.cf_d147_alist;
+  tbl
 
 (* This is much faster than d147 for bytecode (test 0.6 sec instead of 1,1 sec)
    but NOT faster for native code (same speed). Why? *)
@@ -79,7 +82,7 @@ let cf_latin147 s =
   let b = Buffer.create (String.length s * 3) in
   let add_uchar _ _ = function
     | `Malformed  _ -> Uutf.Buffer.add_utf_8 b Uutf.u_rep
-    | `Uchar u -> match Imap.find_opt (Uchar.to_int u) cf_latin147_map with
+    | `Uchar u -> match Hashtbl.find_opt cf_latin147_map (Uchar.to_int u) with
       | None -> Uutf.Buffer.add_utf_8 b u
       | Some s -> Buffer.add_string b s
   in
@@ -93,7 +96,7 @@ let cf_latin145 s =
   let b = Buffer.create (String.length s * 3) in
   let add_uchar _ _ = function
     | `Malformed  _ -> Uutf.Buffer.add_utf_8 b Uutf.u_rep
-    | `Uchar u -> match Imap.find_opt (Uchar.to_int u) cf_latin145_map with
+    | `Uchar u -> match Hashtbl.find_opt cf_latin145_map (Uchar.to_int u) with
       | None -> Uutf.Buffer.add_utf_8 b u
       | Some s -> Buffer.add_string b s
   in
