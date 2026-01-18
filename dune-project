@@ -1,6 +1,6 @@
 (lang dune 2.7)
 (name ufind)
-(version "0.02")
+(version "0.2.0")
 (generate_opam_files true)
 (license GPL-3.0-or-later)
 (maintainers "Vu Ngoc San <san.vu-ngoc@laposte.net>")
