@@ -1,13 +1,13 @@
 (** Case insensitive, accent insensitive search engine
 
-    Ufind is a small {{:https://ocaml.org/}ocaml} library that provides a case
-   insentitive, accent insensitive search in strings encoded in utf8. It is
-   meant to be easy to use, either for searching simple lists, or for digging in
-   large databases.
+    Ufind is a small {{:https://ocaml.org/}ocaml} library that provides a search
+    engine for strings encoded in utf8, which can be parametrized to be accent
+    insensitive, case insentitive, or only partially. It is meant to be easy to
+    use, either for searching simple lists, or for digging in large databases.
 
- Thanks to {{:https://sanette.github.io/ubase/}Ubase}, accents and more general
-   diacritics are recognized for all Latin characters.  For other
-   alphabets/scripts, searching will remain accent sensitive.
+    Thanks to {{:https://sanette.github.io/ubase/}Ubase}, accents and more
+    general diacritics are recognized for all Latin characters.  For other
+    alphabets/scripts, searching will remain accent sensitive.
 
 {{:https://github.com/sanette/ufind}Source on github}
 
