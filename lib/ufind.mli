@@ -1,4 +1,4 @@
-(** Case insensitive, accent insensitive search engine
+(** Utf8 search engine with parameterized case and accent sensibility
 
     Ufind is a small {{:https://ocaml.org/}ocaml} library that provides a search
     engine for strings encoded in utf8, which can be parametrized to be accent
