@@ -9,7 +9,7 @@
 
 (package
  (name ufind)
- (synopsis "Case-insensitive, accent-insensitive search engine for Latin UTF strings")
+ (synopsis "Utf8 search engine with parameterized case and accent sensibility")
  (tags ("utf8"))
  (depends
   (zarith (>= 1.9.1))
