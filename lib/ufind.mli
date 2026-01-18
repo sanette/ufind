@@ -66,9 +66,9 @@ The search can be greatly modified by playing with two filters: {e casefolding}
 
 (** {2 Casefolding}
 
- The [casefolding] parameter is the function used to perform a {b
-   case-insensitive} search. Two strings that have the same image under this
-   function will be considered equal (exact match).
+    The [casefolding] parameter is the function used to tune the {b
+    case-sensitivity} of the search. Two strings that have the same image under
+    this function will be considered equal (exact match).
 
     This function is applied only in the preprocess stage, see below.  *)
 
@@ -98,7 +98,7 @@ type casefolding =
    search.
 
     - If two items have the same base string, they should match in any search,
-   but maybe we a low ranking (low matching quality).
+   but maybe with a low ranking (low matching quality).
 
    Expected property for case-insensitive search:
 
@@ -144,13 +144,13 @@ type matching_defect =
    string, and [base] its ASCII version. The function [f] should have the
    following properties:
 
-      [f s1 s2] returns [None] if [s1] is not considered as a substring of [s2]
+   - [f s1 s2] returns [None] if [s1] is not considered as a substring of [s2]
    (whatever you want it to mean); otherwise
 
-      [f s1 s2] returns [Some d] where the non-negative integer [d] measures the
+   - [f s1 s2] returns [Some d] where the non-negative integer [d] measures the
    defect of [s1] being "close" to [s2]. (The "best match" should return [d=0].)
 
-      [f s1 s2] returns [Some 0] if [s1 = s2].
+   - [f s1 s2] returns [Some 0] if [s1 = s2].
 
    A good matching_defect function should primarily compare the "name" components
    of [s1] and [s2]; it does not need to take into account their "base" components.
